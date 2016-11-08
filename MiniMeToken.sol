@@ -1,3 +1,8 @@
+/*
+Author: Jordi Baylina
+License: GPL 3.0
+ */
+
 pragma solidity ^0.4.4;
 
 contract Owned {
