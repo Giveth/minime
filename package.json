@@ -1,7 +1,7 @@
 {
-  "name": "minimi",
+  "name": "minime",
   "version": "0.0.1",
-  "description": "Minimi contract",
+  "description": "MiniMe contract",
   "main": "index.js",
   "directories": {
     "test": "test"
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CharityDAO/minimi.git"
+    "url": "https://github.com/CharityDAO/minime.git"
   },
   "keywords": [
     "dao",
