@@ -11,7 +11,7 @@ contract Owned {
 
     address public owner;
 
-    /// @returns Returns the owner of this token
+    /// @return Returns the owner of this token
     function Owned() { owner = msg.sender;}
 
     /// @notice Changes the owner of the contract
@@ -92,8 +92,8 @@ contract MiniMeToken is Owned {
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return Whether the transfer was successful or not
-    function transfer(address _to, uint256 _value) returns (bool success) {
-        return doTransfer(msg.sender, _to, _value);
+    function transfer(address _to, uint256 _amount) returns (bool success) {
+        return doTransfer(msg.sender, _to, _amount);
     }
 
     /// @notice Send `_amount` tokens to `_to` from `_from` on the condition it
@@ -102,18 +102,18 @@ contract MiniMeToken is Owned {
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return Whether the transfer was successful or not
-    function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
+    function transferFrom(address _from, address _to, uint256 _amount) returns (bool success) {
         if (isConstant) throw;
         if (msg.sender != owner) {
-            if (allowed[_from][msg.sender] < _value) return false;
-            allowed[_from][msg.sender] -= _value;
+            if (allowed[_from][msg.sender] < _amount) return false;
+            allowed[_from][msg.sender] -= _amount;
         }
-        return doTransfer(_from, _to, _value);
+        return doTransfer(_from, _to, _amount);
     }
 
-    function doTransfer(address _from, address _to, uint _value) internal returns(bool) {
+    function doTransfer(address _from, address _to, uint _amount) internal returns(bool) {
 
-           if (_value == 0) {
+           if (_amount == 0) {
                return true;
            }
 
@@ -122,16 +122,16 @@ contract MiniMeToken is Owned {
 
            // Remove _from votes
            var previousBalanceFrom = balanceOfAt(_from, block.number);
-           if (previousBalanceFrom < _value) {
+           if (previousBalanceFrom < _amount) {
                return false;
            }
 
-           updateValueAtNow(balances[_from], previousBalanceFrom - _value);
+           updateValueAtNow(balances[_from], previousBalanceFrom - _amount);
 
            var previousBalanceTo = balanceOfAt(_to, block.number);
-           updateValueAtNow(balances[_to], previousBalanceTo + _value);
+           updateValueAtNow(balances[_to], previousBalanceTo + _amount);
 
-           Transfer(_from, _to, _value);
+           Transfer(_from, _to, _amount);
 
            return true;
     }
@@ -147,10 +147,10 @@ contract MiniMeToken is Owned {
     /// @param _spender The address of the account able to transfer the tokens
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return Whether the approval was successful or not
-    function approve(address _spender, uint256 _value) returns (bool success) {
+    function approve(address _spender, uint256 _amount) returns (bool success) {
         if (isConstant) throw;
-        allowed[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
+        allowed[msg.sender][_spender] = _amount;
+        Approval(msg.sender, _spender, _amount);
         return true;
     }
 
@@ -163,15 +163,15 @@ contract MiniMeToken is Owned {
     }
 
     /* Approves and then calls the receiving contract (Copied from the Consensis Standard contract) */
-    function approveAndCall(address _spender, uint256 _value, bytes _extraData) returns (bool success) {
+    function approveAndCall(address _spender, uint256 _amount, bytes _extraData) returns (bool success) {
         if (isConstant) throw;
-        allowed[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
+        allowed[msg.sender][_spender] = _amount;
+        Approval(msg.sender, _spender, _amount);
 
         //call the receiveApproval function on the contract you want to be notified. This crafts the function signature manually so one doesn't have to include a contract in here just for this.
-        //receiveApproval(address _from, uint256 _value, address _tokenContract, bytes _extraData)
+        //receiveApproval(address _from, uint256 _amount, address _tokenContract, bytes _extraData)
         //it is assumed that when does this that the call *should* succeed, otherwise one would use vanilla approve instead.
-        if(!_spender.call(bytes4(bytes32(sha3("receiveApproval(address,uint256,address,bytes)"))), msg.sender, _value, this, _extraData)) { throw; }
+        if(!_spender.call(bytes4(bytes32(sha3("receiveApproval(address,uint256,address,bytes)"))), msg.sender, _amount, this, _extraData)) { throw; }
         return true;
     }
 
@@ -248,34 +248,34 @@ contract MiniMeToken is Owned {
 // Generate and destroy tokens
 ////////////////
 
-    /// @notice generates `_value` tokens that are assigned to `_owner`
+    /// @notice generates `_amount` tokens that are assigned to `_owner`
     /// @param _owner address of the owner who the new tokens will be assigned
-    /// @param _value quantity of tokens generated
+    /// @param _amount quantity of tokens generated
     /// @return true if the tokens are generated correctly
-    function generateTokens(address _owner, uint _value) onlyOwner returns (bool) {
+    function generateTokens(address _owner, uint _amount) onlyOwner returns (bool) {
         if (isConstant) throw;
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
-        updateValueAtNow(totalSupplyHistory, curTotalSupply + _value);
+        updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         var previousBalanceTo = balanceOf(_owner);
-        updateValueAtNow(balances[_owner], previousBalanceTo + _value);
-        Transfer(0, _owner, _value);
+        updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
+        Transfer(0, _owner, _amount);
         return true;
     }
 
 
-    /// @notice destroy `_value` tokens from `_owner`
+    /// @notice destroy `_amount` tokens from `_owner`
     /// @param _owner address who the tokens are destroyed from
-    /// @param _value Quantity of tokens to destroy
+    /// @param _amount Quantity of tokens to destroy
     /// @return true if the tokens are removed correctly
-    function destroyTokens(address _owner, uint _value) onlyOwner returns (bool) {
+    function destroyTokens(address _owner, uint _amount) onlyOwner returns (bool) {
         if (isConstant) throw;
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
-        if (curTotalSupply < _value) throw;
-        updateValueAtNow(totalSupplyHistory, curTotalSupply - _value);
+        if (curTotalSupply < _amount) throw;
+        updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
         var previousBalanceFrom = balanceOf(_owner);
-        if (previousBalanceFrom < _value) throw;
-        updateValueAtNow(balances[_owner], previousBalanceFrom - _value);
-        Transfer(_owner, 0, _value);
+        if (previousBalanceFrom < _amount) throw;
+        updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
+        Transfer(_owner, 0, _amount);
         return true;
     }
 
@@ -337,8 +337,8 @@ contract MiniMeToken is Owned {
 ////////////////
 // Events
 ////////////////
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+    event Transfer(address indexed _from, address indexed _to, uint256 _amount);
+    event Approval(address indexed _owner, address indexed _spender, uint256 _amount);
     event NewChildToken(address indexed _childToken, uint _snapshotBlock);
 
 }
