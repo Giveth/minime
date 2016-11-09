@@ -33,15 +33,15 @@ contract MiniMeToken is Owned {
     string public version = 'H0.1';       //human 0.1 standard. Just an arbitrary versioning scheme.
 
     struct  Checkpoint {
-        // snapshot when starts to take effect this assignation
+        // snapshot when starts to take effect this value
         uint fromBlock;
-        // balance assigned to token holder from this snapshot
+        // value used from the block
         uint value;
     }
 
-    MiniMeToken public parentToken;
-    uint public parentSnapShotBlock;
-    uint public creationBlock;
+    MiniMeToken public parentToken;         // Parent token contract. 0x0 for a root token
+    uint public parentSnapShotBlock;        // Block used as the initial ditstribution of the parent token.
+    uint public creationBlock;              // Timestamp when the token was created
     mapping (address => Checkpoint[]) balances;
     mapping (address => mapping (address => uint256)) allowed;
     Checkpoint[] totalSupplyHistory;
