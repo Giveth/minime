@@ -11,13 +11,18 @@ contract Owned {
 
     address public owner;
 
+    /// @returns Returns the owner of this token
     function Owned() { owner = msg.sender;}
 
-
-
+    /// @notice Changes the owner of the contract
+    /// @param _newOwner The new owner of the contract
     function changeOwner(address _newOwner) onlyOwner {
         owner = _newOwner;
     }
+}
+
+contract TokenCreation {
+    function proxyPayment(address _owner) payable returns(bool);
 }
 
 contract MiniMeToken is Owned {
@@ -48,6 +53,17 @@ contract MiniMeToken is Owned {
 // Constructor
 ////////////////
 
+    /// @notice Constructor to create a MiniMeToken
+    /// @param _tokenFactory address of the MiniMeTokenFactory that will create
+    /// the child contracts
+    /// @param _parentToken Address of the parent token, Set to 0 if it is a
+    /// new token.
+    /// @param _parentSnapShotBlock Block where the initail distribution of the
+    /// parent token will be taked.
+    /// @param _tokenName Name of the token
+    /// @param _decimalUnits Number of decimals of the token
+    /// @param _tokenSymbol Token Symbol
+    /// @param _isConstant If true, the tokens will not be able to be transfered
     function MiniMeToken(
         address _tokenFactory,
         address _parentToken,
@@ -72,15 +88,21 @@ contract MiniMeToken is Owned {
 // ERC20 Interface
 ////////////////
 
+    /// @notice Send `_amount` tokens to `_to` from `msg.sender`
+    /// @param _to The address of the recipient
+    /// @param _amount The amount of tokens to be transferred
+    /// @return Whether the transfer was successful or not
     function transfer(address _to, uint256 _value) returns (bool success) {
-
         return doTransfer(msg.sender, _to, _value);
     }
 
+    /// @notice Send `_amount` tokens to `_to` from `_from` on the condition it
+    /// is approved by `_from`
+    /// @param _from The address of the origin of the transfer
+    /// @param _to The address of the recipient
+    /// @param _amount The amount of tokens to be transferred
+    /// @return Whether the transfer was successful or not
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-        //same as above. Replace this line with the following if you want to protect against wrapping uints.
-        //if (balances[_from] >= _value && allowed[_from][msg.sender] >= _value && balances[_to] + _value > balances[_to]) {
-
         if (isConstant) throw;
         if (msg.sender != owner) {
             if (allowed[_from][msg.sender] < _value) return false;
@@ -114,11 +136,17 @@ contract MiniMeToken is Owned {
            return true;
     }
 
-
+    /// @param _owner The address from which the balance will be retrieved
+    /// @return The balance
     function balanceOf(address _owner) constant returns (uint256 balance) {
         return balanceOfAt(_owner, block.number);
     }
 
+    /// @notice `msg.sender` approves `_spender` to spend `_amount` tokens on
+    /// its behalf
+    /// @param _spender The address of the account able to transfer the tokens
+    /// @param _amount The amount of tokens to be approved for transfer
+    /// @return Whether the approval was successful or not
     function approve(address _spender, uint256 _value) returns (bool success) {
         if (isConstant) throw;
         allowed[msg.sender][_spender] = _value;
@@ -126,11 +154,15 @@ contract MiniMeToken is Owned {
         return true;
     }
 
+    /// @param _owner The address of the account owning tokens
+    /// @param _spender The address of the account able to transfer the tokens
+    /// @return Amount of remaining tokens of _owner that _spender is allowed
+    /// to spend
     function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
       return allowed[_owner][_spender];
     }
 
-    /* Approves and then calls the receiving contract */
+    /* Approves and then calls the receiving contract (Copied from the Consensis Standard contract) */
     function approveAndCall(address _spender, uint256 _value, bytes _extraData) returns (bool success) {
         if (isConstant) throw;
         allowed[msg.sender][_spender] = _value;
@@ -143,6 +175,7 @@ contract MiniMeToken is Owned {
         return true;
     }
 
+    /// @return Total amount of tokens
     function totalSupply() constant returns (uint) {
         return totalSupplyAt(block.number);
     }
@@ -152,22 +185,29 @@ contract MiniMeToken is Owned {
 // Query balance and totalSupply in History
 ////////////////
 
-    function balanceOfAt(address _holder, uint _blockNumber) constant returns (uint) {
+    /// @notice Queries the balance of `_owner` at a specific `_blockNumber`.
+    /// @param _owner The address from which the balance will be retrieved
+    /// @param _blockNumber block number when the balance is queried
+    /// @return The balance
+    function balanceOfAt(address _owner, uint _blockNumber) constant returns (uint) {
 
         if (_blockNumber < creationBlock) {
             return 0;
-        } else if ((balances[_holder].length == 0) || (balances[_holder][0].fromBlock > _blockNumber)) {
+        } else if ((balances[_owner].length == 0) || (balances[_owner][0].fromBlock > _blockNumber)) {
             if (address(parentToken) != 0) {
-                return parentToken.balanceOfAt(_holder, parentSnapShotBlock);
+                return parentToken.balanceOfAt(_owner, parentSnapShotBlock);
             } else {
                 return 0;
             }
         } else {
-            return getValueAt( balances[_holder], _blockNumber);
+            return getValueAt( balances[_owner], _blockNumber);
         }
 
     }
 
+    /// @notice Total amount of tokens at a specific `_blockNumber`.
+    /// @param _blockNumber block number when the totalSupply is queried
+    /// @return Total amounts of token at `_blockNumber`
     function totalSupplyAt(uint _blockNumber) constant returns(uint) {
         if (_blockNumber < creationBlock) {
             return 0;
@@ -186,6 +226,17 @@ contract MiniMeToken is Owned {
 // Create a child token from an snapshot of this token at a given block
 ////////////////
 
+    /// @notice creates a new child token with the initial distribution the same
+    /// that this token at `_snapshotBlock`
+    /// @param _childTokenName Name of the child token
+    /// @param _childDecimalUnits Units of the child token
+    /// @param _childTokenSymbol Symbol of the child token
+    /// @param _snapshotBlock Block at when the the distribution of the parent
+    /// token is taken as the initial thistribution of the new generated token.
+    /// If the block is higher that the actual block, the actual block is token
+    /// @param _isConstant Sets if the new child contract will allow transfers
+    /// or not.
+    /// @return The address of the new MiniMeToken Contract
     function createChildToken(string _childTokenName, uint8 _childDecimalUnits, string _childTokenSymbol, uint _snapshotBlock, bool _isConstant) returns(address) {
         if (_snapshotBlock > block.number) _snapshotBlock = block.number;
         MiniMeToken childToken = tokenFactory.createChildToken(this, _snapshotBlock, _childTokenName, _childDecimalUnits, _childTokenSymbol, _isConstant);
@@ -193,35 +244,48 @@ contract MiniMeToken is Owned {
         return address(childToken);
     }
 
-
 ////////////////
 // Generate and destroy tokens
 ////////////////
 
-    function generateTokens(address _holder, uint _value) onlyOwner {
+    /// @notice generates `_value` tokens that are assigned to `_owner`
+    /// @param _owner address of the owner who the new tokens will be assigned
+    /// @param _value quantity of tokens generated
+    /// @return true if the tokens are generated correctly
+    function generateTokens(address _owner, uint _value) onlyOwner returns (bool) {
         if (isConstant) throw;
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _value);
-        var previousBalanceTo = balanceOf(_holder);
-        updateValueAtNow(balances[_holder], previousBalanceTo + _value);
-        Transfer(0, _holder, _value);
+        var previousBalanceTo = balanceOf(_owner);
+        updateValueAtNow(balances[_owner], previousBalanceTo + _value);
+        Transfer(0, _owner, _value);
+        return true;
     }
 
-    function destroyTokens(address _holder, uint _value) onlyOwner {
+
+    /// @notice destroy `_value` tokens from `_owner`
+    /// @param _owner address who the tokens are destroyed from
+    /// @param _value Quantity of tokens to destroy
+    /// @return true if the tokens are removed correctly
+    function destroyTokens(address _owner, uint _value) onlyOwner returns (bool) {
         if (isConstant) throw;
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         if (curTotalSupply < _value) throw;
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _value);
-        var previousBalanceFrom = balanceOf(_holder);
+        var previousBalanceFrom = balanceOf(_owner);
         if (previousBalanceFrom < _value) throw;
-        updateValueAtNow(balances[_holder], previousBalanceFrom - _value);
-        Transfer(_holder, 0, _value);
+        updateValueAtNow(balances[_owner], previousBalanceFrom - _value);
+        Transfer(_owner, 0, _value);
+        return true;
     }
 
 ////////////////
 // Constant tokens
 ////////////////
 
+
+    /// @notice Sets if the contract is constant or not
+    /// @param _isConstant true to don't allow transfers false to allow transfer
     function setConstant(bool _isConstant) onlyOwner {
         isConstant = _isConstant;
     }
@@ -232,7 +296,7 @@ contract MiniMeToken is Owned {
 
     function getValueAt(Checkpoint[] storage checkpoints, uint _block) constant internal returns (uint) {
         if (checkpoints.length == 0) return 0;
-        //Shorcut for the actual value
+        // Shorcut for the actual value
         if (_block >= checkpoints[checkpoints.length-1].fromBlock) return checkpoints[checkpoints.length-1].value;
         if (_block < checkpoints[0].fromBlock) return 0;
         uint min = 0;
@@ -259,7 +323,20 @@ contract MiniMeToken is Owned {
            }
     }
 
+    /// @notice Default method. If the contract has an owner, the Ether is sent
+    /// to the owner thru `proxyPayment` method. Generally, the owner will be
+    /// the contract responsable for the creation of the tokens.
+    function ()  payable {
+        if (owner == 0) throw;
+        if (! TokenCreation(owner).proxyPayment.value(msg.value)(msg.sender)) {
+            throw;
+        }
+    }
 
+
+////////////////
+// Events
+////////////////
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
     event NewChildToken(address indexed _childToken, uint _snapshotBlock);
