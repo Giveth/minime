@@ -1,6 +1,18 @@
 /*
-Author: Jordi Baylina
-License: GPL 3.0
+    Copyright 2016, Jordi Baylina
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 pragma solidity ^0.4.4;
@@ -253,7 +265,6 @@ contract MiniMeToken is Owned {
     /// @param _amount quantity of tokens generated
     /// @return true if the tokens are generated correctly
     function generateTokens(address _owner, uint _amount) onlyOwner returns (bool) {
-        if (isConstant) throw;
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         var previousBalanceTo = balanceOf(_owner);
@@ -268,7 +279,6 @@ contract MiniMeToken is Owned {
     /// @param _amount Quantity of tokens to destroy
     /// @return true if the tokens are removed correctly
     function destroyTokens(address _owner, uint _amount) onlyOwner returns (bool) {
-        if (isConstant) throw;
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         if (curTotalSupply < _amount) throw;
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
