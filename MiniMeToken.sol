@@ -19,13 +19,12 @@
 pragma solidity ^0.4.4;
 
 contract Owned {
-    /// @notice The address of the owner is the only address that can call a 
-    /// function with this modifier
+    /// @notice The address of the owner is the only address that can call a
+    ///  function with this modifier
     modifier onlyOwner { if (msg.sender != owner) throw; _; }
 
     address public owner;
 
-    /// @return Returns the owner of this token
     function Owned() { owner = msg.sender;}
 
     /// @notice Changes the owner of the contract
@@ -54,7 +53,7 @@ contract MiniMeToken is Owned {
         // `fromBlock` is the block number that the value was generated from
         uint fromBlock;
 
-        // `value` is the attribute in question at a specific block number 
+        // `value` is the attribute in question at a specific block number
         uint value;
     }
 
@@ -68,14 +67,19 @@ contract MiniMeToken is Owned {
     // `creationBlock` is the block number that the Cloned Token was created
     uint public creationBlock;
 
-    // `balances` is the map that tracks the balance of each address 
-    mapping (address => Checkpoint[]) balances; 
-    
+    // `balances` is the map that tracks the balance of each address
+    mapping (address => Checkpoint[]) balances;
+
     // `allowed` tracks any extra transfer rights as in all ERC20 tokens
     mapping (address => mapping (address => uint256)) allowed;
+
+    // Tracks the history of the `totalSupply` of the token
     Checkpoint[] totalSupplyHistory;
+
+    // Flag that determines if the token is transferable or not.
     bool public isConstant;
 
+    // The factory used to create new cloned tokens
     MiniMeTokenFactory public tokenFactory;
 
 ////////////////
@@ -88,7 +92,8 @@ contract MiniMeToken is Owned {
     /// @param _parentToken Address of the parent token, set to 0x0 if it is a
     /// new token
     /// @param _parentSnapShotBlock Block of the parent token that will
-    ///  determine the initial distribution of the cloned token
+    ///  determine the initial distribution of the cloned token, set to 0 if it
+    ///  is a new token
     /// @param _tokenName Name of the new token
     /// @param _decimalUnits Number of decimals of the new token
     /// @param _tokenSymbol Token Symbol for the new token
@@ -103,7 +108,7 @@ contract MiniMeToken is Owned {
         bool _isConstant
         ) {
         tokenFactory = MiniMeTokenFactory(_tokenFactory);
-        name = _tokenName;                                 // Set the name 
+        name = _tokenName;                                 // Set the name
         decimals = _decimalUnits;                          // Set the decimals
         symbol = _tokenSymbol;                             // Set the symbol
         parentToken = MiniMeToken(_parentToken);
@@ -114,7 +119,7 @@ contract MiniMeToken is Owned {
 
 
 ///////////////////
-// ERC20 Functions
+// ERC20 Methods
 ///////////////////
 
     /// @notice Send `_amount` tokens to `_to` from `msg.sender`
@@ -128,11 +133,11 @@ contract MiniMeToken is Owned {
 
     /// @notice Send `_amount` tokens to `_to` from `_from` on the condition it
     /// is approved by `_from`
-    /// @param _from The address holding the tokens being transferred 
+    /// @param _from The address holding the tokens being transferred
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
-    function transferFrom(address _from, address _to, uint256 _amount) 
+    function transferFrom(address _from, address _to, uint256 _amount)
         returns (bool success) {
 
         // The owner of this contract can move tokens around at will, this is
@@ -158,7 +163,7 @@ contract MiniMeToken is Owned {
            // Do not allow transfer to 0x0 or the token contract itself
            if ((_to == 0) || (_to == address(this))) throw;
 
-           // If the amount being transfered is more than the balance of the 
+           // If the amount being transfered is more than the balance of the
            // account the transfer returns false
            var previousBalanceFrom = balanceOfAt(_from, block.number);
            if (previousBalanceFrom < _amount) {
@@ -206,7 +211,7 @@ contract MiniMeToken is Owned {
       return allowed[_owner][_spender];
     }
 
-    /* Approves and then calls the receiving contract (Copied from the Consensis Standard contract) */
+    /* Approves and then calls the receiving contract (Copied from the Consensys Standard contract) */
     function approveAndCall(address _spender, uint256 _amount, bytes _extraData) returns (bool success) {
         if (isConstant) throw;
         allowed[msg.sender][_spender] = _amount;
@@ -233,23 +238,24 @@ contract MiniMeToken is Owned {
     /// @param _owner The address from which the balance will be retrieved
     /// @param _blockNumber block number when the balance is queried
     /// @return The balance at `_blockNumber`
-    function balanceOfAt(address _owner, uint _blockNumber) constant 
+    function balanceOfAt(address _owner, uint _blockNumber) constant
         returns (uint) {
 
-        // If the _blockNumber requested is before the genesis block for the 
-        // `parentToken` the value returned is 0
+        // If the _blockNumber requested is before the genesis block for the
+        //  token the value returned is 0
         if (_blockNumber < creationBlock) {
             return 0;
 
-        // These next few lines are used when the balance of the token is 
+        // These next few lines are used when the balance of the token is
         // requested before a check point was ever created for this token, it
         // requires that the `parentToken.balanceOfAt` be queried at the genesis
-        // block for this token as this contains initial balance of this token. 
+        // block for this token as this contains initial balance of this token.
         } else if ((balances[_owner].length == 0)
             || (balances[_owner][0].fromBlock > _blockNumber)) {
             if (address(parentToken) != 0) {
                 return parentToken.balanceOfAt(_owner, parentSnapShotBlock);
             } else {
+                // Has no parent
                 return 0;
             }
 
@@ -278,19 +284,19 @@ contract MiniMeToken is Owned {
     }
 
 ////////////////
-// Create a child token from an snapshot of this token at a given block
+// Clone Token Method
 ////////////////
 
     /// @notice creates a new child token with the initial distribution the same
-    /// that this token at `_snapshotBlock`
+    ///  that this token at `_snapshotBlock`
     /// @param _childTokenName Name of the child token
     /// @param _childDecimalUnits Units of the child token
     /// @param _childTokenSymbol Symbol of the child token
     /// @param _snapshotBlock Block at when the the distribution of the parent
-    /// token is taken as the initial thistribution of the new generated token.
-    /// If the block is higher that the actual block, the actual block is token
+    ///  token is taken as the initial thistribution of the new generated token.
+    ///  If the block is higher that the actual block, the actual block is token
     /// @param _isConstant Sets if the new child contract will allow transfers
-    /// or not.
+    ///  or not.
     /// @return The address of the new MiniMeToken Contract
     function createChildToken(string _childTokenName, uint8 _childDecimalUnits, string _childTokenSymbol, uint _snapshotBlock, bool _isConstant) returns(address) {
         if (_snapshotBlock > block.number) _snapshotBlock = block.number;
@@ -352,6 +358,8 @@ contract MiniMeToken is Owned {
         // Shorcut for the actual value
         if (_block >= checkpoints[checkpoints.length-1].fromBlock) return checkpoints[checkpoints.length-1].value;
         if (_block < checkpoints[0].fromBlock) return 0;
+
+        // Binary search of the value in the array.
         uint min = 0;
         uint max = checkpoints.length-1;
         while (max > min) {
@@ -396,6 +404,14 @@ contract MiniMeToken is Owned {
 
 }
 
+
+////////////////
+// MiniMeTokenFactory
+////////////////
+
+// This contract is used to generate child contracts from a contract.
+// In solidity this is the way to create a contract from a contract of the same
+//  class
 contract MiniMeTokenFactory {
     function createChildToken(
         address _parentToken,
