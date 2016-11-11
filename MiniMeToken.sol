@@ -20,7 +20,7 @@ pragma solidity ^0.4.4;
 /// @title MiniMeToken Contract
 /// @author Jordi Baylina
 /// @dev This token contract's goal is to make it easy to clone this token to
-///  spawn child tokens using the token distribution at a given block.
+///  spawn cloned tokens using the token distribution at a given block.
 /// @dev It is ERC20 compliant, but still needs to under go further testing.
 
 
@@ -40,7 +40,9 @@ contract Controlled {
     }
 }
 
-contract TokenCreation {
+// The controller should implement this interface if wants to receive the ether
+//  sent directly to the token contract.
+contract Controller {
     function proxyPayment(address _owner) payable returns(bool);
 }
 
@@ -53,7 +55,7 @@ contract MiniMeToken is Controlled {
 
 
     /// @dev `Checkpoint` is the structure that attaches a block number to the a
-    ///  given token attribute
+    ///  given value
     struct  Checkpoint {
 
         // `fromBlock` is the block number that the value was generated from
@@ -323,37 +325,37 @@ contract MiniMeToken is Controlled {
 // Clone Token Method
 ////////////////
 
-    /// @notice Creates a new child token with the initial distribution being
+    /// @notice Creates a new cloned token with the initial distribution being
     ///  this token at `_snapshotBlock`
-    /// @param _childTokenName Name of the child token
-    /// @param _childDecimalUnits Units of the child token
-    /// @param _childTokenSymbol Symbol of the child token
+    /// @param _clonedTokenName Name of the cloned token
+    /// @param _clonedDecimalUnits Units of the cloned token
+    /// @param _clonedTokenSymbol Symbol of the cloned token
     /// @param _snapshotBlock Block when the distribution of the parent token is
-    ///  copied to set the initial distribution of the new child token;
+    ///  copied to set the initial distribution of the new cloned token;
     ///  if the block is higher than the actual block, the current block is used
-    /// @param _isConstant True if transfers are not allowed in the child token
+    /// @param _isConstant True if transfers are not allowed in the cloned token
     ///  if the block is higher than the actual block, the current block is used
     /// @return The address of the new MiniMeToken Contract
-    function createChildToken(
-        string _childTokenName,
-        uint8 _childDecimalUnits,
-        string _childTokenSymbol,
+    function createClonedToken(
+        string _clonedTokenName,
+        uint8 _clonedDecimalUnits,
+        string _clonedTokenSymbol,
         uint _snapshotBlock,
         bool _isConstant
         ) returns(address) {
         if (_snapshotBlock > block.number) _snapshotBlock = block.number;
-        MiniMeToken childToken = tokenFactory.createChildToken(
+        MiniMeToken clonedToken = tokenFactory.createClonedToken(
             this,
             _snapshotBlock,
-            _childTokenName,
-            _childDecimalUnits,
-            _childTokenSymbol,
+            _clonedTokenName,
+            _clonedDecimalUnits,
+            _clonedTokenSymbol,
             _isConstant
             );
 
         // An event to make the token easy to find on the blockchain
-        NewChildToken(address(childToken), _snapshotBlock);
-        return address(childToken);
+        NewClonedToken(address(clonedToken), _snapshotBlock);
+        return address(clonedToken);
     }
 
 ////////////////
@@ -446,7 +448,7 @@ contract MiniMeToken is Controlled {
     /// contract) using the `proxyPayment` method.
     function ()  payable {
         if (controller == 0) throw;
-        if (! TokenCreation(controller).proxyPayment.value(msg.value)(msg.sender)) {
+        if (! Controller(controller).proxyPayment.value(msg.value)(msg.sender)) {
             throw;
         }
     }
@@ -456,7 +458,7 @@ contract MiniMeToken is Controlled {
 // Events
 ////////////////
     event Transfer(address indexed _from, address indexed _to, uint256 _amount);
-    event NewChildToken(address indexed _childToken, uint _snapshotBlock);
+    event NewClonedToken(address indexed _clonedToken, uint _snapshotBlock);
     event Approval(
         address indexed _owner,
         address indexed _spender,
@@ -470,11 +472,11 @@ contract MiniMeToken is Controlled {
 // MiniMeTokenFactory
 ////////////////
 
-// This contract is used to generate child contracts from a contract.
+// This contract is used to generate cloned contracts from a contract.
 // In solidity this is the way to create a contract from a contract of the same
 //  class
 contract MiniMeTokenFactory {
-    function createChildToken(
+    function createClonedToken(
         address _parentToken,
         uint _snapshotBlock,
         string _tokenName,

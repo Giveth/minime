@@ -21,7 +21,7 @@ var verbose = false;
 // b[2]  ->  0, 8, 2, 0
 // b[3]  ->  0, 9, 1, 0
 // b[4]  ->  0, 6, 1, 0
-//  Child token
+//  Cloned token
 // b[5]  ->  0, 6, 1, 0
 // b[6]  ->  0, 2, 5. 0
 
@@ -29,7 +29,7 @@ var verbose = false;
 
 describe('MiniMeToken test', function(){
     var miniMeToken;
-    var miniMeTokenChild;
+    var miniMeTokenCloned;
     var b = [];
 
     before(function(done) {
@@ -310,12 +310,12 @@ describe('MiniMeToken test', function(){
         });
     });
 
-    it('Should Create the child token', function(done) {
+    it('Should Create the cloned token', function(done) {
         this.timeout(200000000);
         async.series([
             function(cb) {
-                miniMeToken.createChildToken(
-                    "Child Token 1",
+                miniMeToken.createClonedToken(
+                    "Cloned Token 1",
                     18,
                     "MMTc",
                     Number.MAX_SAFE_INTEGER,
@@ -327,10 +327,10 @@ describe('MiniMeToken test', function(){
                     function(err, txHash) {
                         assert.ifError(err);
                         ethConnector.web3.eth.getTransactionReceipt(txHash, function(err, res) {
-                            var childTokenAddr = ethConnector.web3.toBigNumber(res.logs[0].topics[1]).toString(16);
-                            while (childTokenAddr.length < 40) childTokenAddr = '0' + childTokenAddr;
-                            childTokenAddr = '0x' + childTokenAddr;
-                            miniMeTokenChild = ethConnector.web3.eth.contract( miniMeTokenHelper.miniMeTokenAbi).at(childTokenAddr);
+                            var clonedTokenAddr = ethConnector.web3.toBigNumber(res.logs[0].topics[1]).toString(16);
+                            while (clonedTokenAddr.length < 40) clonedTokenAddr = '0' + clonedTokenAddr;
+                            clonedTokenAddr = '0x' + clonedTokenAddr;
+                            miniMeTokenCloned = ethConnector.web3.eth.contract( miniMeTokenHelper.miniMeTokenAbi).at(clonedTokenAddr);
                             cb();
                         });
                     });
@@ -344,42 +344,42 @@ describe('MiniMeToken test', function(){
                 });
             },
             function(cb) {
-                miniMeTokenChild.parentToken(function(err, _parentAddress) {
+                miniMeTokenCloned.parentToken(function(err, _parentAddress) {
                     assert.ifError(err);
                     assert.equal(_parentAddress, miniMeToken.address);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.parentSnapShotBlock(function(err, _parentSnapshotBlock) {
+                miniMeTokenCloned.parentSnapShotBlock(function(err, _parentSnapshotBlock) {
                     assert.ifError(err);
                     assert.equal(_parentSnapshotBlock, b[5]);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.totalSupply(function(err, _balance) {
+                miniMeTokenCloned.totalSupply(function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 7);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.balanceOf(ethConnector.accounts[1], function(err, _balance) {
+                miniMeTokenCloned.balanceOf(ethConnector.accounts[1], function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 6);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.totalSupplyAt(b[4], function(err, _balance) {
+                miniMeTokenCloned.totalSupplyAt(b[4], function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 0);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.balanceOfAt(ethConnector.accounts[2], b[4], function(err, _balance) {
+                miniMeTokenCloned.balanceOfAt(ethConnector.accounts[2], b[4], function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 0);
                     cb();
@@ -389,10 +389,10 @@ describe('MiniMeToken test', function(){
             done();
         });
     });
-    it('Should move tokens in the child token from 2 to 3', function(done) {
+    it('Should move tokens in the cloned token from 2 to 3', function(done) {
         async.series([
             function(cb) {
-                miniMeTokenChild.transfer(ethConnector.accounts[2], ethConnector.web3.toWei(4), {
+                miniMeTokenCloned.transfer(ethConnector.accounts[2], ethConnector.web3.toWei(4), {
                     from: ethConnector.accounts[1],
                     gas: 200000},
                     function(err) {
@@ -410,14 +410,14 @@ describe('MiniMeToken test', function(){
                 });
             },
             function(cb) {
-                miniMeTokenChild.balanceOf(ethConnector.accounts[1], function(err, _balance) {
+                miniMeTokenCloned.balanceOf(ethConnector.accounts[1], function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 2);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.balanceOf(ethConnector.accounts[2], function(err, _balance) {
+                miniMeTokenCloned.balanceOf(ethConnector.accounts[2], function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 5);
                     cb();
@@ -438,49 +438,49 @@ describe('MiniMeToken test', function(){
                 });
             },
             function(cb) {
-                miniMeTokenChild.balanceOfAt(ethConnector.accounts[1], b[5], function(err, _balance) {
+                miniMeTokenCloned.balanceOfAt(ethConnector.accounts[1], b[5], function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 6);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.balanceOfAt(ethConnector.accounts[2], b[5], function(err, _balance) {
+                miniMeTokenCloned.balanceOfAt(ethConnector.accounts[2], b[5], function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 1);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.balanceOfAt(ethConnector.accounts[1], b[4], function(err, _balance) {
+                miniMeTokenCloned.balanceOfAt(ethConnector.accounts[1], b[4], function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 0);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.balanceOfAt(ethConnector.accounts[2], b[4], function(err, _balance) {
+                miniMeTokenCloned.balanceOfAt(ethConnector.accounts[2], b[4], function(err, _balance) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_balance), 0);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.totalSupply(function(err, _totalSupply) {
+                miniMeTokenCloned.totalSupply(function(err, _totalSupply) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_totalSupply), 7);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.totalSupplyAt(b[5], function(err, _totalSupply) {
+                miniMeTokenCloned.totalSupplyAt(b[5], function(err, _totalSupply) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_totalSupply), 7);
                     cb();
                 });
             },
             function(cb) {
-                miniMeTokenChild.totalSupplyAt(b[4], function(err, _totalSupply) {
+                miniMeTokenCloned.totalSupplyAt(b[4], function(err, _totalSupply) {
                     assert.ifError(err);
                     assert.equal(ethConnector.web3.fromWei(_totalSupply), 0);
                     cb();
