@@ -18,6 +18,13 @@
 
 pragma solidity ^0.4.4;
 
+/// @title MiniMeToken Contract 
+/// @author Jordi Baylina
+/// @dev This token contract's goal is to make it easy to clone this token to 
+/// spawn child tokens using the token distribution at a given block. 
+/// @dev It is ERC 20 compliant, but still needs to under go further testing. 
+
+
 contract Owned {
     /// @notice The address of the owner is the only address that can call a 
     /// function with this modifier
@@ -44,7 +51,7 @@ contract MiniMeToken is Owned {
     string public name;                //The Token's name: e.g. DigixDAO Tokens
     uint8 public decimals;             //Number of decimals of the smallest unit
     string public symbol;              //An identifier: e.g. REP
-    string public version = 'H0.1';    //An arbitrary versioning scheme.
+    string public version = 'MMT_0.1'; //An arbitrary versioning scheme.
 
 
     /// @dev `Checkpoint` is the structure that attaches a block number to the a
@@ -54,7 +61,7 @@ contract MiniMeToken is Owned {
         // `fromBlock` is the block number that the value was generated from
         uint fromBlock;
 
-        // `value` is the attribute in question at a specific block number 
+        // `value` is the amount of tokens at a specific block number 
         uint value;
     }
 
@@ -101,7 +108,7 @@ contract MiniMeToken is Owned {
         uint8 _decimalUnits,
         string _tokenSymbol,
         bool _isConstant
-        ) {
+    ) {
         tokenFactory = MiniMeTokenFactory(_tokenFactory);
         name = _tokenName;                                 // Set the name 
         decimals = _decimalUnits;                          // Set the decimals
@@ -132,8 +139,8 @@ contract MiniMeToken is Owned {
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
-    function transferFrom(address _from, address _to, uint256 _amount) 
-        returns (bool success) {
+    function transferFrom(address _from, address _to, uint256 _amount
+    ) returns (bool success) {
 
         // The owner of this contract can move tokens around at will, this is
         // important to recognize! Confirm that you trust the owner of this
@@ -149,7 +156,8 @@ contract MiniMeToken is Owned {
         return doTransfer(_from, _to, _amount);
     }
 
-    function doTransfer(address _from, address _to, uint _amount) internal returns(bool) {
+    function doTransfer(address _from, address _to, uint _amount
+    ) internal returns(bool) {
 
            if (_amount == 0) {
                return true;
@@ -180,8 +188,8 @@ contract MiniMeToken is Owned {
            return true;
     }
 
-    /// @param _owner The address from which the balance will be retrieved
-    /// @return The balance
+    /// @param _owner The address that's balance is being requested
+    /// @return The balance of `_owner` at the current block
     function balanceOf(address _owner) constant returns (uint256 balance) {
         return balanceOfAt(_owner, block.number);
     }
@@ -190,7 +198,7 @@ contract MiniMeToken is Owned {
     /// its behalf
     /// @param _spender The address of the account able to transfer the tokens
     /// @param _amount The amount of tokens to be approved for transfer
-    /// @return Whether the approval was successful or not
+    /// @return True if the approval was successful
     function approve(address _spender, uint256 _amount) returns (bool success) {
         if (isConstant) throw;
         allowed[msg.sender][_spender] = _amount;
@@ -198,28 +206,45 @@ contract MiniMeToken is Owned {
         return true;
     }
 
-    /// @param _owner The address of the account owning tokens
+    /// @param _owner The address of the account that owns the token
     /// @param _spender The address of the account able to transfer the tokens
     /// @return Amount of remaining tokens of _owner that _spender is allowed
     /// to spend
-    function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
-      return allowed[_owner][_spender];
+    function allowance(address _owner, address _spender
+    ) constant returns (uint256 remaining) {
+        return allowed[_owner][_spender];
     }
 
-    /* Approves and then calls the receiving contract (Copied from the Consensis Standard contract) */
-    function approveAndCall(address _spender, uint256 _amount, bytes _extraData) returns (bool success) {
+    /// @notice `msg.sender` approves `_spender` to send `_amount` tokens on
+    /// its behalf, and then a function is triggered in the contract that is 
+    /// being approved, `_spender`
+    /// @param _spender The address of the contract able to transfer the tokens
+    /// @param _amount The amount of tokens to be approved for transfer
+    /// @return True if the function call was successful
+    function approveAndCall(address _spender, uint256 _amount, bytes _extraData
+    ) returns (bool success) {
         if (isConstant) throw;
         allowed[msg.sender][_spender] = _amount;
         Approval(msg.sender, _spender, _amount);
 
-        //call the receiveApproval function on the contract you want to be notified. This crafts the function signature manually so one doesn't have to include a contract in here just for this.
-        //receiveApproval(address _from, uint256 _amount, address _tokenContract, bytes _extraData)
-        //it is assumed that when does this that the call *should* succeed, otherwise one would use vanilla approve instead.
-        if(!_spender.call(bytes4(bytes32(sha3("receiveApproval(address,uint256,address,bytes)"))), msg.sender, _amount, this, _extraData)) { throw; }
+        // This portion is copied from ConsenSys's Standard Token Contract. It
+        // calls the receiveApproval function that is part of the contract that
+        // is being approved (`_spender`). The function should look like:
+        // `receiveApproval(address _from, uint256 _amount, address 
+        // _tokenContract, bytes _extraData)` It is assumed that the call 
+        // *should* succeed, otherwise one would use vanilla approve instead.
+        if(!_spender.call(
+            bytes4(bytes32(sha3("receiveApproval(address,uint256,address,bytes)"))),
+            msg.sender, 
+            _amount, 
+            this, 
+            _extraData
+            )) { throw;
+        }
         return true;
     }
 
-    /// @return Total amount of tokens
+    /// @return The total amount of tokens
     function totalSupply() constant returns (uint) {
         return totalSupplyAt(block.number);
     }
@@ -229,22 +254,22 @@ contract MiniMeToken is Owned {
 // Query balance and totalSupply in History
 ////////////////
 
-    /// @notice Queries the balance of `_owner` at a specific `_blockNumber`.
+    /// @notice Queries the balance of `_owner` at a specific `_blockNumber`
     /// @param _owner The address from which the balance will be retrieved
-    /// @param _blockNumber block number when the balance is queried
+    /// @param _blockNumber The block number when the balance is queried
     /// @return The balance at `_blockNumber`
     function balanceOfAt(address _owner, uint _blockNumber) constant 
         returns (uint) {
 
-        // If the _blockNumber requested is before the genesis block for the 
-        // `parentToken` the value returned is 0
+        // If the `_blockNumber` requested is before the genesis block for the 
+        // the token being queried, the value returned is 0
         if (_blockNumber < creationBlock) {
             return 0;
 
         // These next few lines are used when the balance of the token is 
         // requested before a check point was ever created for this token, it
         // requires that the `parentToken.balanceOfAt` be queried at the genesis
-        // block for this token as this contains initial balance of this token. 
+        // block for that token as this contains initial balance of this token. 
         } else if ((balances[_owner].length == 0)
             || (balances[_owner][0].fromBlock > _blockNumber)) {
             if (address(parentToken) != 0) {
@@ -261,17 +286,29 @@ contract MiniMeToken is Owned {
     }
 
     /// @notice Total amount of tokens at a specific `_blockNumber`.
-    /// @param _blockNumber block number when the totalSupply is queried
-    /// @return Total amounts of token at `_blockNumber`
+    /// @param _blockNumber The block number when the totalSupply is queried
+    /// @return The total amount of tokens at `_blockNumber`
     function totalSupplyAt(uint _blockNumber) constant returns(uint) {
+
+        // If the `_blockNumber` requested is before the genesis block for the 
+        // the token being queried, the value returned is 0
         if (_blockNumber < creationBlock) {
             return 0;
-        } else if ((totalSupplyHistory.length == 0) || (totalSupplyHistory[0].fromBlock > _blockNumber)) {
+
+        // These next few lines are used when the totalSupply of the token is 
+        // requested before a check point was ever created for this token, it
+        // requires that the `parentToken.totalSupplyAt` be queried at the 
+        // genesis block for this token as that contains totalSupply of this 
+        // token at this block number. 
+        } else if ((totalSupplyHistory.length == 0) 
+            || (totalSupplyHistory[0].fromBlock > _blockNumber)) {
             if (address(parentToken) != 0) {
                 return parentToken.totalSupplyAt(parentSnapShotBlock);
             } else {
                 return 0;
             }
+
+        // This will return the expected totalSupply during normal situations
         } else {
             return getValueAt( totalSupplyHistory, _blockNumber);
         }
@@ -281,20 +318,34 @@ contract MiniMeToken is Owned {
 // Create a child token from an snapshot of this token at a given block
 ////////////////
 
-    /// @notice creates a new child token with the initial distribution the same
-    /// that this token at `_snapshotBlock`
+    /// @notice Creates a new child token with the initial distribution being
+    /// this token at `_snapshotBlock`
     /// @param _childTokenName Name of the child token
     /// @param _childDecimalUnits Units of the child token
     /// @param _childTokenSymbol Symbol of the child token
-    /// @param _snapshotBlock Block at when the the distribution of the parent
-    /// token is taken as the initial thistribution of the new generated token.
-    /// If the block is higher that the actual block, the actual block is token
-    /// @param _isConstant Sets if the new child contract will allow transfers
-    /// or not.
+    /// @param _snapshotBlock Block when the distribution of the parent token is
+    /// copied to set the initial distribution of the new child token;
+    /// if the block is higher than the actual block, the current block is used
+    /// @param _isConstant True if transfers are not allowed in the child token 
     /// @return The address of the new MiniMeToken Contract
-    function createChildToken(string _childTokenName, uint8 _childDecimalUnits, string _childTokenSymbol, uint _snapshotBlock, bool _isConstant) returns(address) {
+    function createChildToken(
+        string _childTokenName, 
+        uint8 _childDecimalUnits, 
+        string _childTokenSymbol, 
+        uint _snapshotBlock, 
+        bool _isConstant
+        ) returns(address) {
         if (_snapshotBlock > block.number) _snapshotBlock = block.number;
-        MiniMeToken childToken = tokenFactory.createChildToken(this, _snapshotBlock, _childTokenName, _childDecimalUnits, _childTokenSymbol, _isConstant);
+        MiniMeToken childToken = tokenFactory.createChildToken(
+            this, 
+            _snapshotBlock, 
+            _childTokenName, 
+            _childDecimalUnits, 
+            _childTokenSymbol, 
+            _isConstant
+            );
+
+        // An event to make the token easy to find on the blockchain
         NewChildToken(address(childToken), _snapshotBlock);
         return address(childToken);
     }
@@ -303,11 +354,12 @@ contract MiniMeToken is Owned {
 // Generate and destroy tokens
 ////////////////
 
-    /// @notice generates `_amount` tokens that are assigned to `_owner`
-    /// @param _owner address of the owner who the new tokens will be assigned
-    /// @param _amount quantity of tokens generated
-    /// @return true if the tokens are generated correctly
-    function generateTokens(address _owner, uint _amount) onlyOwner returns (bool) {
+    /// @notice Generates `_amount` tokens that are assigned to `_owner`
+    /// @param _owner The address that will be assigned the new tokens
+    /// @param _amount The quantity of tokens generated
+    /// @return True if the tokens are generated correctly
+    function generateTokens(address _owner, uint _amount
+    ) onlyOwner returns (bool) {
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         var previousBalanceTo = balanceOf(_owner);
@@ -317,11 +369,12 @@ contract MiniMeToken is Owned {
     }
 
 
-    /// @notice destroy `_amount` tokens from `_owner`
-    /// @param _owner address who the tokens are destroyed from
-    /// @param _amount Quantity of tokens to destroy
-    /// @return true if the tokens are removed correctly
-    function destroyTokens(address _owner, uint _amount) onlyOwner returns (bool) {
+    /// @notice Burns `_amount` tokens from `_owner`
+    /// @param _owner The address that will lose the tokens
+    /// @param _amount The quantity of tokens to burn
+    /// @return True if the tokens are burned correctly
+    function destroyTokens(address _owner, uint _amount
+    ) onlyOwner returns (bool) {
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         if (curTotalSupply < _amount) throw;
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
@@ -347,10 +400,12 @@ contract MiniMeToken is Owned {
 // Internal helper functions to query and set a value in a snapshot array
 ////////////////
 
-    function getValueAt(Checkpoint[] storage checkpoints, uint _block) constant internal returns (uint) {
+    function getValueAt(Checkpoint[] storage checkpoints, uint _block
+    ) constant internal returns (uint) {
         if (checkpoints.length == 0) return 0;
         // Shorcut for the actual value
-        if (_block >= checkpoints[checkpoints.length-1].fromBlock) return checkpoints[checkpoints.length-1].value;
+        if (_block >= checkpoints[checkpoints.length-1].fromBlock)
+            return checkpoints[checkpoints.length-1].value;
         if (_block < checkpoints[0].fromBlock) return 0;
         uint min = 0;
         uint max = checkpoints.length-1;
@@ -365,8 +420,10 @@ contract MiniMeToken is Owned {
         return checkpoints[min].value;
     }
 
-    function updateValueAtNow(Checkpoint[] storage checkpoints, uint _value) internal  {
-           if ((checkpoints.length == 0) || (checkpoints[checkpoints.length -1].fromBlock < block.number)) {
+    function updateValueAtNow(Checkpoint[] storage checkpoints, uint _value
+    ) internal  {
+        if ((checkpoints.length == 0) 
+        || (checkpoints[checkpoints.length -1].fromBlock < block.number)) {
                Checkpoint newCheckPoint = checkpoints[ checkpoints.length++ ];
                newCheckPoint.fromBlock =  block.number;
                newCheckPoint.value = _value;
@@ -376,9 +433,9 @@ contract MiniMeToken is Owned {
            }
     }
 
-    /// @notice Default method. If the contract has an owner, the Ether is sent
-    /// to the owner thru `proxyPayment` method. Generally, the owner will be
-    /// the contract responsable for the creation of the tokens.
+    /// @notice The fallback function: If the contract's owner has not been set
+    /// to 0, the ether is sent to the owner (normally the token creation
+    /// contract) using the `proxyPayment` method. 
     function ()  payable {
         if (owner == 0) throw;
         if (! TokenCreation(owner).proxyPayment.value(msg.value)(msg.sender)) {
@@ -391,8 +448,12 @@ contract MiniMeToken is Owned {
 // Events
 ////////////////
     event Transfer(address indexed _from, address indexed _to, uint256 _amount);
-    event Approval(address indexed _owner, address indexed _spender, uint256 _amount);
     event NewChildToken(address indexed _childToken, uint _snapshotBlock);
+    event Approval(
+        address indexed _owner,
+        address indexed _spender,
+        uint256 _amount
+        );
 
 }
 
@@ -405,7 +466,15 @@ contract MiniMeTokenFactory {
         string _tokenSymbol,
         bool _isConstant
     ) returns (MiniMeToken) {
-        MiniMeToken newToken = new MiniMeToken(this, _parentToken, _snapshotBlock, _tokenName, _decimalUnits, _tokenSymbol, _isConstant);
+        MiniMeToken newToken = new MiniMeToken(
+            this,
+            _parentToken,
+            _snapshotBlock,
+            _tokenName,
+            _decimalUnits,
+            _tokenSymbol,
+            _isConstant
+            );
         return newToken;
     }
 }
