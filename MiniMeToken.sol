@@ -25,8 +25,8 @@ pragma solidity ^0.4.4;
 
 
 contract Controlled {
-    /// @notice The address of the controller is the only address that can call a
-    ///  function with this modifier
+    /// @notice The address of the controller is the only address that can call
+    ///  a function with this modifier
     modifier onlyController { if (msg.sender != controller) throw; _; }
 
     address public controller;
@@ -146,10 +146,10 @@ contract MiniMeToken is Controlled {
     function transferFrom(address _from, address _to, uint256 _amount
     ) returns (bool success) {
 
-        // The controller of this contract can move tokens around at will, this is
-        //  important to recognize! Confirm that you trust the controller of this
-        //  contract, which in most situations should be another open source
-        //  smart contract or 0x0
+        // The controller of this contract can move tokens around at will, this
+        //  is important to recognize! Confirm that you trust the controller of
+        //  this contract, which in most situations should be another open
+        //  source smart contract or 0x0
         if (msg.sender != controller) {
             if (isConstant) throw;
 
@@ -272,8 +272,9 @@ contract MiniMeToken is Controlled {
 
         // These next few lines are used when the balance of the token is
         //  requested before a check point was ever created for this token, it
-        //  requires that the `parentToken.balanceOfAt` be queried at the genesis
-        //  block for that token as this contains initial balance of this token.
+        //  requires that the `parentToken.balanceOfAt` be queried at the
+        //  genesis block for that token as this contains initial balance of 
+        //  this token
         } else if ((balances[_owner].length == 0)
             || (balances[_owner][0].fromBlock > _blockNumber)) {
             if (address(parentToken) != 0) {
@@ -409,12 +410,12 @@ contract MiniMeToken is Controlled {
     function getValueAt(Checkpoint[] storage checkpoints, uint _block
     ) constant internal returns (uint) {
         if (checkpoints.length == 0) return 0;
-        // Shorcut for the actual value
+        // Shortcut for the actual value
         if (_block >= checkpoints[checkpoints.length-1].fromBlock)
             return checkpoints[checkpoints.length-1].value;
         if (_block < checkpoints[0].fromBlock) return 0;
 
-        // Binary search of the value in the array.
+        // Binary search of the value in the array
         uint min = 0;
         uint max = checkpoints.length-1;
         while (max > min) {
@@ -441,9 +442,9 @@ contract MiniMeToken is Controlled {
            }
     }
 
-    /// @notice The fallback function: If the contract's owner has not been set
-    /// to 0, the ether is sent to the owner (normally the token creation
-    /// contract) using the `proxyPayment` method.
+    /// @notice The fallback function: If the contract's controller has not been
+    /// set to 0, the ether is sent to the controller (normally the token
+    /// creation contract) using the `proxyPayment` method.
     function ()  payable {
         if (controller == 0) throw;
         if (! TokenCreation(controller).proxyPayment.value(msg.value)(msg.sender)) {
