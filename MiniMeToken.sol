@@ -24,19 +24,19 @@ pragma solidity ^0.4.4;
 /// @dev It is ERC20 compliant, but still needs to under go further testing.
 
 
-contract Owned {
-    /// @notice The address of the owner is the only address that can call a
+contract Controlled {
+    /// @notice The address of the controller is the only address that can call a
     ///  function with this modifier
-    modifier onlyOwner { if (msg.sender != owner) throw; _; }
+    modifier onlyController { if (msg.sender != controller) throw; _; }
 
-    address public owner;
+    address public controller;
 
-    function Owned() { owner = msg.sender;}
+    function Controlled() { controller = msg.sender;}
 
-    /// @notice Changes the owner of the contract
-    /// @param _newOwner The new owner of the contract
-    function changeOwner(address _newOwner) onlyOwner {
-        owner = _newOwner;
+    /// @notice Changes the controller of the contract
+    /// @param _newController The new controller of the contract
+    function changeController(address _newController) onlyController {
+        controller = _newController;
     }
 }
 
@@ -44,7 +44,7 @@ contract TokenCreation {
     function proxyPayment(address _owner) payable returns(bool);
 }
 
-contract MiniMeToken is Owned {
+contract MiniMeToken is Controlled {
 
     string public name;                //The Token's name: e.g. DigixDAO Tokens
     uint8 public decimals;             //Number of decimals of the smallest unit
@@ -146,11 +146,11 @@ contract MiniMeToken is Owned {
     function transferFrom(address _from, address _to, uint256 _amount
     ) returns (bool success) {
 
-        // The owner of this contract can move tokens around at will, this is
-        //  important to recognize! Confirm that you trust the owner of this
+        // The controller of this contract can move tokens around at will, this is
+        //  important to recognize! Confirm that you trust the controller of this
         //  contract, which in most situations should be another open source
         //  smart contract or 0x0
-        if (msg.sender != owner) {
+        if (msg.sender != controller) {
             if (isConstant) throw;
 
             // The standard ERC 20 transferFrom functionality
@@ -365,7 +365,7 @@ contract MiniMeToken is Owned {
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
     function generateTokens(address _owner, uint _amount
-    ) onlyOwner returns (bool) {
+    ) onlyController returns (bool) {
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         var previousBalanceTo = balanceOf(_owner);
@@ -380,7 +380,7 @@ contract MiniMeToken is Owned {
     /// @param _amount The quantity of tokens to burn
     /// @return True if the tokens are burned correctly
     function destroyTokens(address _owner, uint _amount
-    ) onlyOwner returns (bool) {
+    ) onlyController returns (bool) {
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         if (curTotalSupply < _amount) throw;
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
@@ -398,7 +398,7 @@ contract MiniMeToken is Owned {
 
     /// @notice Sets if the contract is constant or not
     /// @param _isConstant true to don't allow transfers false to allow transfer
-    function setConstant(bool _isConstant) onlyOwner {
+    function setConstant(bool _isConstant) onlyController {
         isConstant = _isConstant;
     }
 
@@ -445,8 +445,8 @@ contract MiniMeToken is Owned {
     /// to 0, the ether is sent to the owner (normally the token creation
     /// contract) using the `proxyPayment` method.
     function ()  payable {
-        if (owner == 0) throw;
-        if (! TokenCreation(owner).proxyPayment.value(msg.value)(msg.sender)) {
+        if (controller == 0) throw;
+        if (! TokenCreation(controller).proxyPayment.value(msg.value)(msg.sender)) {
             throw;
         }
     }
