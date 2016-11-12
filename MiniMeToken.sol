@@ -19,8 +19,8 @@ pragma solidity ^0.4.4;
 
 /// @title MiniMeToken Contract
 /// @author Jordi Baylina
-/// @dev This token contract's goal is to make it easy to clone this token to
-///  spawn cloned tokens using the token distribution at a given block.
+/// @dev This token contract's goal is to make it easy to clone this token and
+///  spawn new tokens using the token distribution at a given block.
 /// @dev It is ERC20 compliant, but still needs to under go further testing.
 
 
@@ -51,7 +51,7 @@ contract MiniMeToken is Controlled {
     string public name;                //The Token's name: e.g. DigixDAO Tokens
     uint8 public decimals;             //Number of decimals of the smallest unit
     string public symbol;              //An identifier: e.g. REP
-    string public version = 'MMT_0.1'; //An arbitrary versioning scheme.
+    string public version = 'MMT_0.1'; //An arbitrary versioning scheme
 
 
     /// @dev `Checkpoint` is the structure that attaches a block number to the a
@@ -65,14 +65,15 @@ contract MiniMeToken is Controlled {
         uint value;
     }
 
-    // `parentToken` is the Token address that was cloned. 0x0 for a root token
+    // `parentToken` is the Token address that was cloned to produce this token;
+    //  it will be 0x0 for a token that was not cloned
     MiniMeToken public parentToken;
 
     // `parentSnapShotBlock` is the Block number from the Parent Token that was
-    //  used to determine the initial distribution of the Cloned Token.
+    //  used to determine the initial distribution of the Clone Token
     uint public parentSnapShotBlock;
 
-    // `creationBlock` is the block number that the Cloned Token was created
+    // `creationBlock` is the block number that the Clone Token was created
     uint public creationBlock;
 
     // `balances` is the map that tracks the balance of each address
@@ -87,7 +88,7 @@ contract MiniMeToken is Controlled {
     // Flag that determines if the token is transferable or not.
     bool public isConstant;
 
-    // The factory used to create new cloned tokens
+    // The factory used to create new clone tokens
     MiniMeTokenFactory public tokenFactory;
 
 ////////////////
@@ -96,11 +97,11 @@ contract MiniMeToken is Controlled {
 
     /// @notice Constructor to create a MiniMeToken
     /// @param _tokenFactory The address of the MiniMeTokenFactory contract that
-    ///  will create the Cloned token contracts
+    ///  will create the Clone token contracts
     /// @param _parentToken Address of the parent token, set to 0x0 if it is a
     ///  new token
     /// @param _parentSnapShotBlock Block of the parent token that will
-    ///  determine the initial distribution of the cloned token, set to 0 if it
+    ///  determine the initial distribution of the clone token, set to 0 if it
     ///  is a new token
     /// @param _tokenName Name of the new token
     /// @param _decimalUnits Number of decimals of the new token
@@ -326,37 +327,37 @@ contract MiniMeToken is Controlled {
 // Clone Token Method
 ////////////////
 
-    /// @notice Creates a new cloned token with the initial distribution being
+    /// @notice Creates a new clone token with the initial distribution being
     ///  this token at `_snapshotBlock`
-    /// @param _clonedTokenName Name of the cloned token
-    /// @param _clonedDecimalUnits Units of the cloned token
-    /// @param _clonedTokenSymbol Symbol of the cloned token
+    /// @param _cloneTokenName Name of the clone token
+    /// @param _cloneDecimalUnits Units of the clone token
+    /// @param _cloneTokenSymbol Symbol of the clone token
     /// @param _snapshotBlock Block when the distribution of the parent token is
-    ///  copied to set the initial distribution of the new cloned token;
+    ///  copied to set the initial distribution of the new clone token;
     ///  if the block is higher than the actual block, the current block is used
-    /// @param _isConstant True if transfers are not allowed in the cloned token
+    /// @param _isConstant True if transfers are not allowed in the clone token
     ///  if the block is higher than the actual block, the current block is used
     /// @return The address of the new MiniMeToken Contract
-    function createClonedToken(
-        string _clonedTokenName,
-        uint8 _clonedDecimalUnits,
-        string _clonedTokenSymbol,
+    function createCloneToken(
+        string _cloneTokenName,
+        uint8 _cloneDecimalUnits,
+        string _cloneTokenSymbol,
         uint _snapshotBlock,
         bool _isConstant
         ) returns(address) {
         if (_snapshotBlock > block.number) _snapshotBlock = block.number;
-        MiniMeToken clonedToken = tokenFactory.createClonedToken(
+        MiniMeToken cloneToken = tokenFactory.createCloneToken(
             this,
             _snapshotBlock,
-            _clonedTokenName,
-            _clonedDecimalUnits,
-            _clonedTokenSymbol,
+            _cloneTokenName,
+            _cloneDecimalUnits,
+            _cloneTokenSymbol,
             _isConstant
             );
 
         // An event to make the token easy to find on the blockchain
-        NewClonedToken(address(clonedToken), _snapshotBlock);
-        return address(clonedToken);
+        NewCloneToken(address(cloneToken), _snapshotBlock);
+        return address(cloneToken);
     }
 
 ////////////////
@@ -459,7 +460,7 @@ contract MiniMeToken is Controlled {
 // Events
 ////////////////
     event Transfer(address indexed _from, address indexed _to, uint256 _amount);
-    event NewClonedToken(address indexed _clonedToken, uint _snapshotBlock);
+    event NewCloneToken(address indexed _cloneToken, uint _snapshotBlock);
     event Approval(
         address indexed _owner,
         address indexed _spender,
@@ -473,11 +474,11 @@ contract MiniMeToken is Controlled {
 // MiniMeTokenFactory
 ////////////////
 
-// This contract is used to generate cloned contracts from a contract.
+// This contract is used to generate clone contracts from a contract.
 // In solidity this is the way to create a contract from a contract of the same
 //  class
 contract MiniMeTokenFactory {
-    function createClonedToken(
+    function createCloneToken(
         address _parentToken,
         uint _snapshotBlock,
         string _tokenName,
