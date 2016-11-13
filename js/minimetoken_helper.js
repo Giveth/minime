@@ -63,7 +63,7 @@ exports.deploy = function(opts, cb) {
                 opts.tokenName,
                 opts.decimalUnits,
                 opts.tokenSymbol,
-                opts.isConstant || false,
+                (opts.transfersEnabled === false) ? false : true,
                 function(err, _minimeToken) {
                     if (err) return cb(err);
                     minimeToken = _minimeToken;

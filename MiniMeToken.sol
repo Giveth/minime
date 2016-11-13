@@ -86,7 +86,7 @@ contract MiniMeToken is Controlled {
     Checkpoint[] totalSupplyHistory;
 
     // Flag that determines if the token is transferable or not.
-    bool public isConstant;
+    bool public transfersEnabled;
 
     // The factory used to create new clone tokens
     MiniMeTokenFactory public tokenFactory;
@@ -106,7 +106,7 @@ contract MiniMeToken is Controlled {
     /// @param _tokenName Name of the new token
     /// @param _decimalUnits Number of decimals of the new token
     /// @param _tokenSymbol Token Symbol for the new token
-    /// @param _isConstant If true, tokens will not be able to be transferred
+    /// @param _transfersEnabled If true, tokens will not be able to be transferred
     function MiniMeToken(
         address _tokenFactory,
         address _parentToken,
@@ -114,7 +114,7 @@ contract MiniMeToken is Controlled {
         string _tokenName,
         uint8 _decimalUnits,
         string _tokenSymbol,
-        bool _isConstant
+        bool _transfersEnabled
     ) {
         tokenFactory = MiniMeTokenFactory(_tokenFactory);
         name = _tokenName;                                 // Set the name
@@ -122,7 +122,7 @@ contract MiniMeToken is Controlled {
         symbol = _tokenSymbol;                             // Set the symbol
         parentToken = MiniMeToken(_parentToken);
         parentSnapShotBlock = _parentSnapShotBlock;
-        isConstant = _isConstant;
+        transfersEnabled = _transfersEnabled;
         creationBlock = block.number;
     }
 
@@ -136,7 +136,7 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be transferred
     /// @return Whether the transfer was successful or not
     function transfer(address _to, uint256 _amount) returns (bool success) {
-        if (isConstant) throw;
+        if (!transfersEnabled) throw;
         return doTransfer(msg.sender, _to, _amount);
     }
 
@@ -154,7 +154,7 @@ contract MiniMeToken is Controlled {
         //  this contract, which in most situations should be another open
         //  source smart contract or 0x0
         if (msg.sender != controller) {
-            if (isConstant) throw;
+            if (!transfersEnabled) throw;
 
             // The standard ERC 20 transferFrom functionality
             if (allowed[_from][msg.sender] < _amount) return false;
@@ -207,7 +207,7 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return True if the approval was successful
     function approve(address _spender, uint256 _amount) returns (bool success) {
-        if (isConstant) throw;
+        if (!transfersEnabled) throw;
         allowed[msg.sender][_spender] = _amount;
         Approval(msg.sender, _spender, _amount);
         return true;
@@ -230,7 +230,6 @@ contract MiniMeToken is Controlled {
     /// @return True if the function call was successful
     function approveAndCall(address _spender, uint256 _amount, bytes _extraData
     ) returns (bool success) {
-        if (isConstant) throw;
         allowed[msg.sender][_spender] = _amount;
         Approval(msg.sender, _spender, _amount);
 
@@ -276,7 +275,7 @@ contract MiniMeToken is Controlled {
         // These next few lines are used when the balance of the token is
         //  requested before a check point was ever created for this token, it
         //  requires that the `parentToken.balanceOfAt` be queried at the
-        //  genesis block for that token as this contains initial balance of 
+        //  genesis block for that token as this contains initial balance of
         //  this token
         } else if ((balances[_owner].length == 0)
             || (balances[_owner][0].fromBlock > _blockNumber)) {
@@ -335,7 +334,7 @@ contract MiniMeToken is Controlled {
     /// @param _snapshotBlock Block when the distribution of the parent token is
     ///  copied to set the initial distribution of the new clone token;
     ///  if the block is higher than the actual block, the current block is used
-    /// @param _isConstant True if transfers are not allowed in the clone token
+    /// @param _transfersEnabled True if transfers are not allowed in the clone token
     ///  if the block is higher than the actual block, the current block is used
     /// @return The address of the new MiniMeToken Contract
     function createCloneToken(
@@ -343,7 +342,7 @@ contract MiniMeToken is Controlled {
         uint8 _cloneDecimalUnits,
         string _cloneTokenSymbol,
         uint _snapshotBlock,
-        bool _isConstant
+        bool _transfersEnabled
         ) returns(address) {
         if (_snapshotBlock > block.number) _snapshotBlock = block.number;
         MiniMeToken cloneToken = tokenFactory.createCloneToken(
@@ -352,7 +351,7 @@ contract MiniMeToken is Controlled {
             _cloneTokenName,
             _cloneDecimalUnits,
             _cloneTokenSymbol,
-            _isConstant
+            _transfersEnabled
             );
 
         // An event to make the token easy to find on the blockchain
@@ -396,14 +395,14 @@ contract MiniMeToken is Controlled {
     }
 
 ////////////////
-// Constant tokens
+// Enable tokens transfers
 ////////////////
 
 
-    /// @notice Sets if the contract is constant or not
-    /// @param _isConstant true to don't allow transfers false to allow transfer
-    function setConstant(bool _isConstant) onlyController {
-        isConstant = _isConstant;
+    /// @notice Sets if the contract allows transfers or not
+    /// @param _transfersEnabled true to don't allow transfers false to allow transfer
+    function enableTransfers(bool _transfersEnabled) onlyController {
+        transfersEnabled = _transfersEnabled;
     }
 
 ////////////////
@@ -484,7 +483,7 @@ contract MiniMeTokenFactory {
         string _tokenName,
         uint8 _decimalUnits,
         string _tokenSymbol,
-        bool _isConstant
+        bool _transfersEnabled
     ) returns (MiniMeToken) {
         MiniMeToken newToken = new MiniMeToken(
             this,
@@ -493,7 +492,7 @@ contract MiniMeTokenFactory {
             _tokenName,
             _decimalUnits,
             _tokenSymbol,
-            _isConstant
+            _transfersEnabled
             );
         return newToken;
     }
