@@ -400,7 +400,7 @@ contract MiniMeToken is Controlled {
 
 
     /// @notice Sets if the contract allows transfers or not
-    /// @param _transfersEnabled true to don't allow transfers false to allow transfer
+    /// @param _transfersEnabled false to don't allow transfers true to allow transfer
     function enableTransfers(bool _transfersEnabled) onlyController {
         transfersEnabled = _transfersEnabled;
     }

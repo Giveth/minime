@@ -38,9 +38,9 @@ To create and destroy tokens, these two functions are introduced:
 
 ### The Token's Controller can freeze transfers.
 
- If isConstant == True, tokens cannot be transfered, however they can still be created or destroyed by the controller. The controller can also toggle this flag. 
+ If transfersEnabled == false, tokens cannot be transfered by the users, however they can still be created or destroyed or transfered by the controller. The controller can also toggle this flag.
 
-    function setConstant(bool _isConstant) onlyOwner  // Allows tokens to be transfered if false or frozen if true
+    function enableTransfers(bool _transfersEnabled) onlyOwner  // Allows tokens to be transfered if true or frozen if false
 
 
 ## Applications
@@ -53,7 +53,7 @@ If this Token contract is used as the base token, then it can easily generate cl
 4. Generating a token that can be used to give explicit support to an action or a campaign.
 5. Generating a token to enable the token holders to collect daily, monthly or yearly payments.
 6. Generating a token to limit participation in a specific token sale or similar event to holders of a specific token.
-7. Generating token that allows a central party complete control to transfer/generate/destroy tokens at will. 
+7. Generating token that allows a central party complete control to transfer/generate/destroy tokens at will.
 8. Lots of other applications including all the applications the standard ERC 20 token can be used for.
 
-All these applications and more are enabled by the MiniMe Token Contract by anyone without effecting the parent token nor requiring any action from the parent token holders. 
+All these applications and more are enabled by the MiniMe Token Contract by anyone without effecting the parent token nor requiring any action from the parent token holders.
