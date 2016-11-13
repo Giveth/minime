@@ -2,57 +2,58 @@
 
 A MiniMeToken is a standard ERC20 token with some extra functionality:
 
-### The token is clonable
+### The token is easy to clone!
 
-Any body can create a new token with an initial distribution of cloned tokens identical to the original token. At some specific block.
+Anybody can create a new clone token of any token using this contract with an initial distribution identical to the original token at a specified block. The address calling the `createCloneToken` function will become the token controller and the token's default settings can be specified in the function call.
 
-To create a child token, the next function is defined:
+    function createCloneToken(
+        string _cloneTokenName,
+        uint8 _cloneDecimalUnits,
+        string _cloneTokenSymbol,
+        uint _snapshotBlock,
+        bool _isConstant
+        ) returns(address) {
 
-     function createChildToken(
-            string _childTokenName,
-            uint8 _childDecimalUnits,
-            string _childTokenSymbol
-            uint _snapshotBlock,            // if block is not already mined, it will teke the current block
-            bool _isConstant
-        ) returns(address)
+Once the clone token is created, it acts as a completely independent token.
 
-Once the child token is created, it acts as a completely independent token.
+### Balance history is registered and available to be queried
 
-### Balances history is registered and available
-
-The contract maintains a history of all the distribution changes of the token. Two calls are introduced to know the totalSupply and the balance of any address at any block in the past.
+All MiniMe Tokens maintain a history of the balance changes that occur during each block. Two calls are introduced to read the totalSupply and the balance of any address at any block in the past.
 
     function totalSupplyAt(uint _blockNumber) constant returns(uint)
 
     function balanceOfAt(address _holder, uint _blockNumber) constant returns (uint)
 
-### Optional token owner
+### Optional token controller
 
-The owner of the contract can generate/destroy/transfer tokens at its own discretion. Of course, the owner can be a regular account, another contract that rules the contract or just the address 0x0 if this functionality is not wanted.
+The controller of the contract can generate/destroy/transfer tokens at its own discretion. The controller can be a regular account, but the intention is for the controller to be another contract that imposes transparent rules on the token's issuance and functionality. The Token Controller is not required for the MiniMe token to function, if there is no reason to  generate/destroy/transfer tokens, the token controller can be set to 0x0 and this functionality will be disabled.
 
-As an example, a Token Creation contract can be the owner of the Token Contract and at the end of the token creation period, the ownership can be transfered to the 0x0 address.
+For example, a Token Creation contract can be set as the controller of the MiniMe Token and at the end of the token creation period, the controller can be transfered to the 0x0 address, to guarentee that no new tokens will be created.
 
-To create and destroy tokens, this two functions are introduced:
+To create and destroy tokens, these two functions are introduced:
 
     function generateTokens(address _holder, uint _value) onlyOwner
 
     function destroyTokens(address _holder, uint _value) onlyOwner
 
-### Owner of the token can freeze the transfers.
+### The Token's Controller can freeze transfers.
 
-Tokens can be created with the constant flag set on, and the owner can also toggle this flag. When a token is flagged with this flag, no transfers, generations and destroys are allowed.
+ If isConstant == True, tokens cannot be transfered, however they can still be created or destroyed by the controller. The controller can also toggle this flag. 
 
-    function setConstant(bool _isConstant) onlyOwner
+    function setConstant(bool _isConstant) onlyOwner  // Allows tokens to be transfered if false or frozen if true
 
 
 ## Applications
 
-Some of the applications that child tokens can be used for are:
+If this Token contract is used as the base token, then it can easily generate clones of itself at any given block number, which allows for incredibly powerful functionality. Some of the applications that the MiniMe token contract can be used for are:
 
-1. a ballot that is burned when you vote.
-2. a discount ticked that is redeemed when you use it.
-3. a token of a "spinoff" DAO.
-4. a token that can be used to give explicit support to an action or a campaign.
-5. lots of other applications.
+1. Generating a voting token that is burned when you vote.
+2. Generating a discount ticket that is redeemed when you use it.
+3. Generating a token for a "spinoff" DAO.
+4. Generating a token that can be used to give explicit support to an action or a campaign.
+5. Generating a token to enable the token holders to collect daily, monthly or yearly payments.
+6. Generating a token to limit participation in a specific token sale or similar event to holders of a specific token.
+7. Generating token that allows a central party complete control to transfer/generate/destroy tokens at will. 
+8. Lots of other applications including all the applications the standard ERC 20 token can be used for.
 
-And all that maintaining always the original token.
+All these applications and more are enabled by the MiniMe Token Contract without effecting the parent token nor requiring any action from the tok
