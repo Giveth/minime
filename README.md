@@ -56,4 +56,4 @@ If this Token contract is used as the base token, then it can easily generate cl
 7. Generating token that allows a central party complete control to transfer/generate/destroy tokens at will. 
 8. Lots of other applications including all the applications the standard ERC 20 token can be used for.
 
-All these applications and more are enabled by the MiniMe Token Contract without effecting the parent token nor requiring any action from the tok
+All these applications and more are enabled by the MiniMe Token Contract by anyone without effecting the parent token nor requiring any action from the parent token holders. 
