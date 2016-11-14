@@ -106,7 +106,7 @@ contract MiniMeToken is Controlled {
     /// @param _tokenName Name of the new token
     /// @param _decimalUnits Number of decimals of the new token
     /// @param _tokenSymbol Token Symbol for the new token
-    /// @param _transfersEnabled If true, tokens will not be able to be transferred
+    /// @param _transfersEnabled If true, tokens will be able to be transferred
     function MiniMeToken(
         address _tokenFactory,
         address _parentToken,
@@ -334,8 +334,7 @@ contract MiniMeToken is Controlled {
     /// @param _snapshotBlock Block when the distribution of the parent token is
     ///  copied to set the initial distribution of the new clone token;
     ///  if the block is higher than the actual block, the current block is used
-    /// @param _transfersEnabled True if transfers are not allowed in the clone token
-    ///  if the block is higher than the actual block, the current block is used
+    /// @param _transfersEnabled True if transfers are allowed in the clone
     /// @return The address of the new MiniMeToken Contract
     function createCloneToken(
         string _cloneTokenName,
@@ -399,8 +398,8 @@ contract MiniMeToken is Controlled {
 ////////////////
 
 
-    /// @notice Sets if the contract allows transfers or not
-    /// @param _transfersEnabled false to don't allow transfers true to allow transfer
+    /// @notice Enables token holders to transfer their tokens freely if true
+    /// @param _transfersEnabled True if transfers are allowed in the clone
     function enableTransfers(bool _transfersEnabled) onlyController {
         transfersEnabled = _transfersEnabled;
     }
