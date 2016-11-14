@@ -27,7 +27,7 @@
   "bugs": {
     "url": "https://github.com/CharityDAO/minimi/issues"
   },
-  "homepage": "https://github.com/CharityDAO/future",
+  "homepage": "https://github.com/CharityDAO/minime",
   "dependencies": {
     "ethconnector": "0.0.13"
   }
