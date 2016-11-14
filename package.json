@@ -29,6 +29,6 @@
   },
   "homepage": "https://github.com/CharityDAO/minime",
   "dependencies": {
-    "ethconnector": "0.0.13"
+    "ethconnector": "0.0.14"
   }
 }
