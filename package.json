@@ -20,14 +20,16 @@
     "charity",
     "smart",
     "contract",
-    "minime"
+    "minime",
+    "giveth",
+    "ethereum"
   ],
   "author": "Jordi Baylina",
   "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/Giveth/minimi/issues"
   },
-  "homepage": "https://github.com/CharityDAO/minime",
+  "homepage": "https://github.com/Giveth/minime",
   "dependencies": {
     "ethconnector": "0.0.14"
   }
