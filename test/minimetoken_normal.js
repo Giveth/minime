@@ -101,7 +101,17 @@ describe('MiniMeToken test', function(){
     it('Should transfer tokens from address 1 to address 2', function(done) {
         this.timeout(2000);
         async.series([
-
+            function(cb) {
+                miniMeToken.transfer.estimateGas(ethConnector.accounts[2], ethConnector.web3.toWei(2), {
+                    from: ethConnector.accounts[1],
+                    gas: 200000},
+                    function(err, res) {
+                        assert.ifError(err);
+                        log("Gas for transfer: "+res);
+                        cb();
+                    }
+                );
+            },
             function(cb) {
                 miniMeToken.transfer(ethConnector.accounts[2], ethConnector.web3.toWei(2), {
                     from: ethConnector.accounts[1],
@@ -313,6 +323,24 @@ describe('MiniMeToken test', function(){
     it('Should Create the clone token', function(done) {
         this.timeout(200000000);
         async.series([
+            function(cb) {
+                miniMeToken.createCloneToken.estimateGas(
+                    "Clone Token 1",
+                    18,
+                    "MMTc",
+                    Number.MAX_SAFE_INTEGER,
+                    true,
+                    {
+                        from: ethConnector.accounts[3],
+                        gas: 4700000
+                    },
+                    function(err, res) {
+                        assert.ifError(err);
+                        log("Gas to create: " +res);
+                        cb();
+                    }
+                );
+            },
             function(cb) {
                 miniMeToken.createCloneToken(
                     "Clone Token 1",

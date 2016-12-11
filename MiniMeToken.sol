@@ -208,6 +208,12 @@ contract MiniMeToken is Controlled {
     /// @return True if the approval was successful
     function approve(address _spender, uint256 _amount) returns (bool success) {
         if (!transfersEnabled) throw;
+
+        // To change the approve amount you first have to reduce the addresses´
+        // allowance to zero by calling `approve(_spender,0)` if it is not
+        // already 0 https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+        if ((_amount!=0) && (allowed[msg.sender][_spender] !=0)) throw;
+
         allowed[msg.sender][_spender] = _amount;
         Approval(msg.sender, _spender, _amount);
         return true;
