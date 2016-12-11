@@ -26,9 +26,25 @@ pragma solidity ^0.4.4;
 
 // The controller must implement this interface
 contract TokenController {
+    /// @notice Called when `_owner` sends ether to the MiniMe Token contract
+    /// @param _owner The address that sent the ether
+    /// @return True if the ether is accepted, false if it throws
     function proxyPayment(address _owner) payable returns(bool);
+
+    /// @notice Notifies the controller about a transfer
+    /// @param _from The origin of the transfer
+    /// @param _to The destination of the transfer
+    /// @param _amount The amount of the transfer
+    /// @return False if the controller does not authorize the transfer
     function onTransfer(address _from, address _to, uint _amount) returns(bool);
-    function onApprove(address _owner, address _spender, uint _amount) returns(bool);
+
+    /// @notice Notifies the controller about an approval
+    /// @param _owner The address that calls `approve()`
+    /// @param _spender The spender in the `approve()` call
+    /// @param _amount The ammount in the `approve()` call
+    /// @return False if the controller does not authorize the approval
+    function onApprove(address _owner, address _spender, uint _amount)
+        returns(bool);
 }
 
 contract Controlled {
@@ -182,7 +198,8 @@ contract MiniMeToken is Controlled {
            }
 
            if ((controller != 0)&&(isContract(controller))) {
-               if (!TokenController(controller).onTransfer(_from, _to, _amount)) throw;
+               if (!TokenController(controller).onTransfer(_from, _to, _amount))
+               throw;
            }
 
            // First update the balance array with the new value for the address
@@ -220,7 +237,8 @@ contract MiniMeToken is Controlled {
         if ((_amount!=0) && (allowed[msg.sender][_spender] !=0)) throw;
 
         if ((controller != 0)&&(isContract(controller))) {
-            if (!TokenController(controller).onApprove(msg.sender, _spender, _amount)) throw;
+            if (!TokenController(controller).onApprove(msg.sender, _spender, _amount))
+                throw;
         }
 
         allowed[msg.sender][_spender] = _amount;
@@ -475,7 +493,8 @@ contract MiniMeToken is Controlled {
     function ()  payable {
         if (controller == 0) throw;
         if (isContract(controller)) {
-            if (! TokenController(controller).proxyPayment.value(msg.value)(msg.sender))  throw;
+            if (! TokenController(controller).proxyPayment.value(msg.value)(msg.sender))
+                throw;
         } else {
             if (! controller.send(msg.value)) throw;
         }
