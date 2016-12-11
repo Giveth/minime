@@ -60,10 +60,10 @@ contract MiniMeToken is Controlled {
     struct  Checkpoint {
 
         // `fromBlock` is the block number that the value was generated from
-        uint fromBlock;
+        uint128 fromBlock;
 
         // `value` is the amount of tokens at a specific block number
-        uint value;
+        uint128 value;
     }
 
     // `parentToken` is the Token address that was cloned to produce this token;
@@ -452,11 +452,11 @@ contract MiniMeToken is Controlled {
         if ((checkpoints.length == 0)
         || (checkpoints[checkpoints.length -1].fromBlock < block.number)) {
                Checkpoint newCheckPoint = checkpoints[ checkpoints.length++ ];
-               newCheckPoint.fromBlock =  block.number;
-               newCheckPoint.value = _value;
+               newCheckPoint.fromBlock =  uint128(block.number);
+               newCheckPoint.value = uint128(_value);
            } else {
                Checkpoint oldCheckPoint = checkpoints[checkpoints.length-1];
-               oldCheckPoint.value = _value;
+               oldCheckPoint.value = uint128(_value);
            }
     }
 
