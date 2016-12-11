@@ -24,6 +24,13 @@ pragma solidity ^0.4.4;
 /// @dev It is ERC20 compliant, but still needs to under go further testing.
 
 
+// The controller must implement this interface
+contract TokenController {
+    function proxyPayment(address _owner) payable returns(bool);
+    function onTransfer(address _from, address _to, uint _amount) returns(bool);
+    function onApprove(address _owner, address _spender, uint _amount) returns(bool);
+}
+
 contract Controlled {
     /// @notice The address of the controller is the only address that can call
     ///  a function with this modifier
@@ -38,12 +45,6 @@ contract Controlled {
     function changeController(address _newController) onlyController {
         controller = _newController;
     }
-}
-
-// The controller should implement this interface if wants to receive the ether
-//  sent directly to the token contract.
-contract Controller {
-    function proxyPayment(address _owner) payable returns(bool);
 }
 
 contract MiniMeToken is Controlled {
@@ -180,6 +181,10 @@ contract MiniMeToken is Controlled {
                return false;
            }
 
+           if ((controller != 0)&&(isContract(controller))) {
+               if (!TokenController(controller).onTransfer(_from, _to, _amount)) throw;
+           }
+
            // First update the balance array with the new value for the address
            //  sending the tokens
            updateValueAtNow(balances[_from], previousBalanceFrom - _amount);
@@ -213,6 +218,10 @@ contract MiniMeToken is Controlled {
         // allowance to zero by calling `approve(_spender,0)` if it is not
         // already 0 https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
         if ((_amount!=0) && (allowed[msg.sender][_spender] !=0)) throw;
+
+        if ((controller != 0)&&(isContract(controller))) {
+            if (!TokenController(controller).onApprove(msg.sender, _spender, _amount)) throw;
+        }
 
         allowed[msg.sender][_spender] = _amount;
         Approval(msg.sender, _spender, _amount);
@@ -359,6 +368,8 @@ contract MiniMeToken is Controlled {
             _transfersEnabled
             );
 
+        cloneToken.changeController(msg.sender);
+
         // An event to make the token easy to find on the blockchain
         NewCloneToken(address(cloneToken), _snapshotBlock);
         return address(cloneToken);
@@ -449,12 +460,27 @@ contract MiniMeToken is Controlled {
            }
     }
 
+    // Internal function to determine if an address is a cntract
+    function isContract(address _addr) constant internal returns(bool) {
+        uint size;
+        assembly {
+            size := extcodesize(_addr)
+        }
+        return size>0;
+    }
+
     /// @notice The fallback function: If the contract's controller has not been
     /// set to 0, the ether is sent to the controller (normally the token
     /// creation contract) using the `proxyPayment` method.
     function ()  payable {
         if (controller == 0) throw;
-        if (! Controller(controller).proxyPayment.value(msg.value)(msg.sender)) {
+        if (isContract(controller)) {
+            if (! TokenController(controller).proxyPayment.value(msg.value)(msg.sender))  throw;
+        } else {
+            if (! controller.send(msg.value)) throw;
+        }
+
+        if (! TokenController(controller).proxyPayment.value(msg.value)(msg.sender)) {
             throw;
         }
     }
@@ -499,6 +525,8 @@ contract MiniMeTokenFactory {
             _tokenSymbol,
             _transfersEnabled
             );
+
+        newToken.changeController(msg.sender);
         return newToken;
     }
 }

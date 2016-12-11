@@ -33,7 +33,7 @@ describe('MiniMeToken test', function(){
     var b = [];
 
     before(function(done) {
-        ethConnector.init('testrpc' ,done);
+        ethConnector.init('testrpc' ,{gasLimit: 4000000}, done);
 //        ethConnector.init('rpc', done);
     });
     it('should deploy all the contracts ', function(done){
@@ -332,7 +332,7 @@ describe('MiniMeToken test', function(){
                     true,
                     {
                         from: ethConnector.accounts[3],
-                        gas: 4700000
+                        gas: 4000000
                     },
                     function(err, res) {
                         assert.ifError(err);
@@ -350,7 +350,7 @@ describe('MiniMeToken test', function(){
                     true,
                     {
                         from: ethConnector.accounts[3],
-                        gas: 4700000
+                        gas: 4000000
                     },
                     function(err, txHash) {
                         assert.ifError(err);
@@ -422,7 +422,7 @@ describe('MiniMeToken test', function(){
             function(cb) {
                 miniMeTokenClone.transfer(ethConnector.accounts[2], ethConnector.web3.toWei(4), {
                     from: ethConnector.accounts[1],
-                    gas: 200000},
+                    gas: 300000},
                     function(err) {
                         assert.ifError(err);
                         cb();
