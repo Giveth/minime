@@ -498,10 +498,6 @@ contract MiniMeToken is Controlled {
         } else {
             if (! controller.send(msg.value)) throw;
         }
-
-        if (! TokenController(controller).proxyPayment.value(msg.value)(msg.sender)) {
-            throw;
-        }
     }
 
 
