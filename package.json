@@ -31,6 +31,6 @@
   },
   "homepage": "https://github.com/Giveth/minime",
   "dependencies": {
-    "ethconnector": "0.0.14"
+    "ethconnector": "0.0.19"
   }
 }
