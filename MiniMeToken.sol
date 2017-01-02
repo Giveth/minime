@@ -523,15 +523,13 @@ contract MiniMeToken is Controlled {
     }
 
     /// @notice The fallback function: If the contract's controller has not been
-    ///  set to 0, then the `proxyPayment` method is called which relays the 
-    ///  ether and creates tokens as described in the token controller contract
+    ///  set to a contract with the `proxyPayment` method then sending ether to
+    ///  this contract will not work, otherwise `proxyPayment` is called which 
+    ///  relays the ether and creates tokens as described in the token controller
     function ()  payable {
-        if (isContract(controller)) {
-            if (! TokenController(controller).proxyPayment.value(msg.value)(msg.sender))
-                throw;
-        } else {
+        if (! TokenController(controller).proxyPayment.value(msg.value)(msg.sender))
             throw;
-
+    }
 
 ////////////////
 // Events
