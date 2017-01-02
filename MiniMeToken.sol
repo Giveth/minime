@@ -526,14 +526,11 @@ contract MiniMeToken is Controlled {
     ///  set to 0, then the `proxyPayment` method is called which relays the 
     ///  ether and creates tokens as described in the token controller contract
     function ()  payable {
-        if (controller == 0) throw;
         if (isContract(controller)) {
             if (! TokenController(controller).proxyPayment.value(msg.value)(msg.sender))
                 throw;
         } else {
-            if (! controller.send(msg.value)) throw;
-        }
-    }
+            throw;
 
 
 ////////////////
