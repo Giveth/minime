@@ -20,7 +20,7 @@ pragma solidity ^0.4.6;
 /// @title MilestoneTracker Contract
 /// @author Jordi Baylina
 /// @dev This contract controls the issuance of tokens for the MiniMe Token
-///  Contract. This version specifically acts as a Campaign manager for raising 
+///  Contract. This version specifically acts as a Campaign manager for raising
 ///  funds for non-profit causes, but it can be customized for any variety of
 ///  purposes.
 
@@ -49,8 +49,8 @@ contract Owned {
 
 
 /// @dev This is designed to control the issuance of a MiniMe Token for a
-///  non-profit Campaign. This contract effectively dictates the terms of the 
-///  funding round.  
+///  non-profit Campaign. This contract effectively dictates the terms of the
+///  funding round.
 
 contract Campaign is TokenController, Owned {
 
@@ -78,7 +78,8 @@ contract Campaign is TokenController, Owned {
         uint _endFundingTime,
         uint _maximumFunding,
         address _vaultAddress,
-        address _tokenAddress
+        address _tokenAddress,
+
     ) {
         if ((_endFundingTime < now) ||                // Cannot end in the past
             (_endFundingTime <= _startFundingTime) ||
@@ -173,7 +174,7 @@ contract Campaign is TokenController, Owned {
         return;
     }
 
-/// @notice `finalizeFunding()` ends the Campaign by calling setting the 
+/// @notice `finalizeFunding()` ends the Campaign by calling setting the
 ///  controller to 0, thereby ending the issuance of new tokens and stopping the
 ///  Campaign from receiving more ether
 /// @dev `finalizeFunding()` can only be called after the end of the funding period.

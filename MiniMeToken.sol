@@ -19,9 +19,9 @@ pragma solidity ^0.4.6;
 
 /// @title MiniMeToken Contract
 /// @author Jordi Baylina
-/// @dev This token contract's goal is to make it easy for anyone to clone this 
+/// @dev This token contract's goal is to make it easy for anyone to clone this
 ///  token using the token distribution at a given block, this will allow DAO's
-///  and DApps to upgrade their features in a decentralized manner without 
+///  and DApps to upgrade their features in a decentralized manner without
 ///  affecting the original token
 /// @dev It is ERC20 compliant, but still needs to under go further testing.
 
@@ -33,7 +33,7 @@ contract TokenController {
     /// @return True if the ether is accepted, false if it throws
     function proxyPayment(address _owner) payable returns(bool);
 
-    /// @notice Notifies the controller about a token transfer allowing the 
+    /// @notice Notifies the controller about a token transfer allowing the
     ///  controller to react if desired
     /// @param _from The origin of the transfer
     /// @param _to The destination of the transfer
@@ -41,7 +41,7 @@ contract TokenController {
     /// @return False if the controller does not authorize the transfer
     function onTransfer(address _from, address _to, uint _amount) returns(bool);
 
-    /// @notice Notifies the controller about an approval allowing the 
+    /// @notice Notifies the controller about an approval allowing the
     ///  controller to react if desired
     /// @param _owner The address that calls `approve()`
     /// @param _spender The spender in the `approve()` call
@@ -67,7 +67,7 @@ contract Controlled {
     }
 }
 
-/// @dev The actual token contract, the default controller is the msg.sender 
+/// @dev The actual token contract, the default controller is the msg.sender
 ///  that deploys the contract, so usually this token will be deployed by a
 ///  token controller contract, which Giveth will call a "Campaign"
 contract MiniMeToken is Controlled {
@@ -124,7 +124,7 @@ contract MiniMeToken is Controlled {
 
     /// @notice Constructor to create a MiniMeToken
     /// @param _tokenFactory The address of the MiniMeTokenFactory contract that
-    ///  will create the Clone token contracts, the token factory needs to be 
+    ///  will create the Clone token contracts, the token factory needs to be
     ///  deployed first
     /// @param _parentToken Address of the parent token, set to 0x0 if it is a
     ///  new token
@@ -177,10 +177,10 @@ contract MiniMeToken is Controlled {
     function transferFrom(address _from, address _to, uint256 _amount
     ) returns (bool success) {
 
-        /// @dev The controller of this contract can move tokens around at will,
-        ///  this is important to recognize! Confirm that you trust the
-        ///  controller of this contract, which in most situations should be
-        ///  another open source smart contract or 0x0
+        // The controller of this contract can move tokens around at will,
+        //  this is important to recognize! Confirm that you trust the
+        //  controller of this contract, which in most situations should be
+        //  another open source smart contract or 0x0
         if (msg.sender != controller) {
             if (!transfersEnabled) throw;
 
@@ -191,7 +191,7 @@ contract MiniMeToken is Controlled {
         return doTransfer(_from, _to, _amount);
     }
 
-    /// @dev This is the actual transfer function in the token contract, it can 
+    /// @dev This is the actual transfer function in the token contract, it can
     ///  only be called by other functions in this contract.
     /// @param _from The address holding the tokens being transferred
     /// @param _to The address of the recipient
@@ -243,7 +243,7 @@ contract MiniMeToken is Controlled {
 
     /// @notice `msg.sender` approves `_spender` to spend `_amount` tokens on
     ///  its behalf. This is a modified version of the ERC20 approve function
-    ///  to be a little bit safer 
+    ///  to be a little bit safer
     /// @param _spender The address of the account able to transfer the tokens
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return True if the approval was successful
@@ -279,7 +279,7 @@ contract MiniMeToken is Controlled {
 
     /// @notice `msg.sender` approves `_spender` to send `_amount` tokens on
     ///  its behalf, and then a function is triggered in the contract that is
-    ///  being approved, `_spender`. This allows users to use their tokens to 
+    ///  being approved, `_spender`. This allows users to use their tokens to
     ///  interact with contracts in one function call instead of two
     /// @param _spender The address of the contract able to transfer the tokens
     /// @param _amount The amount of tokens to be approved for transfer
@@ -494,7 +494,7 @@ contract MiniMeToken is Controlled {
         return checkpoints[min].value;
     }
 
-    /// @dev `updateValueAtNow` used to update the `balances` map and the 
+    /// @dev `updateValueAtNow` used to update the `balances` map and the
     ///  `totalSupplyHistory`
     /// @param checkpoints The history of data being updated
     /// @param _value The new number of tokens
@@ -516,6 +516,7 @@ contract MiniMeToken is Controlled {
     /// @return True if `_addr` is a contract
     function isContract(address _addr) constant internal returns(bool) {
         uint size;
+        if (_addr == 0) return false;
         assembly {
             size := extcodesize(_addr)
         }
@@ -523,7 +524,7 @@ contract MiniMeToken is Controlled {
     }
 
     /// @notice The fallback function: If the contract's controller has not been
-    ///  set to 0, then the `proxyPayment` method is called which relays the 
+    ///  set to 0, then the `proxyPayment` method is called which relays the
     ///  ether and creates tokens as described in the token controller contract
     function ()  payable {
         if (isContract(controller)) {
@@ -531,6 +532,8 @@ contract MiniMeToken is Controlled {
                 throw;
         } else {
             throw;
+        }
+    }
 
 
 ////////////////

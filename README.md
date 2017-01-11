@@ -14,7 +14,7 @@ Anybody can create a new clone token from any token using this contract with an 
         bool _isConstant
         ) returns(address) {
 
-Once the clone token is created, it acts as a completely independent token, with it's own unique functionalities. 
+Once the clone token is created, it acts as a completely independent token, with it's own unique functionalities.
 
 ### Balance history is registered and available to be queried
 
@@ -41,7 +41,7 @@ To create and destroy tokens, these two functions are introduced:
 If transfersEnabled == false, tokens cannot be transferred by the users, however they can still be created, destroyed, and transferred by the controller. The controller can also toggle this flag.
 
     // Allows tokens to be transferred if true or frozen if false
-    function enableTransfers(bool _transfersEnabled) onlyController  
+    function enableTransfers(bool _transfersEnabled) onlyController
 
 
 ## Applications
@@ -58,3 +58,13 @@ If this token contract is used as the base token, then clones of itself can be e
 8. Lots of other applications including all the applications the standard ERC 20 token can be used for.
 
 All these applications and more are enabled by the MiniMe Token Contract. The most amazing part being that anyone that wants to add these features can, in a permissionless yet safe manner without affecting the parent token's intended functionality.
+
+# How to deploy a campaign
+
+1. Deploy the MinimeTokenFactory
+2. Deploy the MinimeToken
+3. Deploy the campaig
+4. Assign the controller of the MinimeToken to the campaign.
+
+
+
