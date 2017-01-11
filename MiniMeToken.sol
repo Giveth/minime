@@ -215,7 +215,7 @@ contract MiniMeToken is Controlled {
            }
 
            // Alerts the token controller of the transfer
-           if ((controller != 0)&&(isContract(controller))) {
+           if (isContract(controller)) {
                if (!TokenController(controller).onTransfer(_from, _to, _amount))
                throw;
            }
@@ -257,7 +257,7 @@ contract MiniMeToken is Controlled {
         if ((_amount!=0) && (allowed[msg.sender][_spender] !=0)) throw;
 
         // Alerts the token controller of the approve function call
-        if ((controller != 0)&&(isContract(controller))) {
+        if (isContract(controller)) {
             if (!TokenController(controller).onApprove(msg.sender, _spender, _amount))
                 throw;
         }
