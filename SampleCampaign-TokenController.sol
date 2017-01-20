@@ -78,7 +78,7 @@ contract Campaign is TokenController, Owned {
         uint _endFundingTime,
         uint _maximumFunding,
         address _vaultAddress,
-        address _tokenAddress,
+        address _tokenAddress
 
     ) {
         if ((_endFundingTime < now) ||                // Cannot end in the past
