@@ -32,16 +32,16 @@ exports.deploy = function(opts, cb) {
             });
         },
         function(cb) {
-            ethConnector.compile(src, function(err, result) {
+            ethConnector.solCompile(src, function(err, result) {
                 if (err) return cb(err);
                 compilationResult = result;
                 cb();
             });
         },
         function(cb) {
-            miniMeTokenFactoryAbi = JSON.parse(compilationResult.MiniMeTokenFactory.interface);
-            ethConnector.deploy(compilationResult.MiniMeTokenFactory.interface,
-                compilationResult.MiniMeTokenFactory.bytecode,
+            miniMeTokenFactoryAbi = JSON.parse(compilationResult[":MiniMeTokenFactory"].interface);
+            ethConnector.deploy(compilationResult[":MiniMeTokenFactory"].interface,
+                compilationResult[":MiniMeTokenFactory"].bytecode,
                 0,
                 0,
                 function(err, _miniMeTokenFactory) {
@@ -51,10 +51,10 @@ exports.deploy = function(opts, cb) {
                 });
         },
         function(cb) {
-            miniMeTokenAbi = JSON.parse(compilationResult.MiniMeToken.interface);
+            miniMeTokenAbi = JSON.parse(compilationResult[":MiniMeToken"].interface);
             exports.miniMeTokenAbi = miniMeTokenAbi;
-            ethConnector.deploy(compilationResult.MiniMeToken.interface,
-                compilationResult.MiniMeToken.bytecode,
+            ethConnector.deploy(compilationResult[":MiniMeToken"].interface,
+                compilationResult[":MiniMeToken"].bytecode,
                 0,
                 0,
                 miniMeTokenFactory.address,

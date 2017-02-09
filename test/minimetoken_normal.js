@@ -33,10 +33,12 @@ describe('MiniMeToken test', function(){
     var b = [];
 
     before(function(done) {
+        this.timeout(200000000);
         ethConnector.init('testrpc' ,{gasLimit: 4000000}, done);
 //        ethConnector.init('rpc', done);
     });
     it('should deploy all the contracts ', function(done){
+
         this.timeout(200000000);
         var now = Math.floor(new Date().getTime() /1000);
 
