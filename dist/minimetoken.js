@@ -269,7 +269,6 @@ var MiniMeToken = function () {
                 params.parentToken = params.parentToken || 0;
                 params.parentSnapShotBlock = params.parentSnapShotBlock || 0;
                 params.transfersEnabled = typeof params.transfersEnabled === "undefined" ? true : params.transfersEnabled;
-
                 _async2.default.series([function (cb1) {
                     params.abi = _MiniMeTokenSol.MiniMeTokenFactoryAbi;
                     params.byteCode = _MiniMeTokenSol.MiniMeTokenFactoryByteCode;
