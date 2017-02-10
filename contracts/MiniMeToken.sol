@@ -149,8 +149,6 @@ contract MiniMeToken is Controlled {
         decimals = _decimalUnits;                          // Set the decimals
         symbol = _tokenSymbol;                             // Set the symbol
         parentToken = MiniMeToken(_parentToken);
-        parentSnapShotBlock = _parentSnapShotBlock;
-        transfersEnabled = _transfersEnabled;
         creationBlock = block.number;
     }
 
