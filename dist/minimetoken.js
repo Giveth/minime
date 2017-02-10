@@ -264,31 +264,46 @@ var MiniMeToken = function () {
     }], [{
         key: "deploy",
         value: function deploy(web3, opts, cb) {
-            var params = Object.assign({}, opts);
-            params.parentToken = params.parentToken || 0;
-            params.parentSnapShotBlock = params.parentSnapShotBlock || 0;
-            params.transfersEnabled = typeof params.transfersEnabled === "undefined" ? true : params.transfersEnabled;
+            var promise = new Promise(function (resolve, reject) {
+                var params = Object.assign({}, opts);
+                params.parentToken = params.parentToken || 0;
+                params.parentSnapShotBlock = params.parentSnapShotBlock || 0;
+                params.transfersEnabled = typeof params.transfersEnabled === "undefined" ? true : params.transfersEnabled;
 
-            _async2.default.series([function (cb1) {
-                params.abi = _MiniMeTokenSol.MiniMeTokenFactoryAbi;
-                params.byteCode = _MiniMeTokenSol.MiniMeTokenFactoryByteCode;
-                (0, _runethtx.deploy)(web3, params, function (err, _tokenFactory) {
+                _async2.default.series([function (cb1) {
+                    params.abi = _MiniMeTokenSol.MiniMeTokenFactoryAbi;
+                    params.byteCode = _MiniMeTokenSol.MiniMeTokenFactoryByteCode;
+                    (0, _runethtx.deploy)(web3, params, function (err, _tokenFactory) {
+                        if (err) {
+                            cb1(err);
+                            return;
+                        }
+                        params.tokenFactory = _tokenFactory.address;
+                        cb1();
+                    });
+                }, function (cb1) {
+                    params.abi = _MiniMeTokenSol.MiniMeTokenAbi;
+                    params.byteCode = _MiniMeTokenSol.MiniMeTokenByteCode;
+                    (0, _runethtx.deploy)(web3, params, cb1);
+                }], function (err, res) {
                     if (err) {
-                        cb1(err);
+                        reject(err);
                         return;
                     }
-                    params.tokenFactory = _tokenFactory.address;
-                    cb1();
+                    var minime = new MiniMeToken(web3, res[1].address);
+                    resolve(minime);
                 });
-            }, function (cb1) {
-                params.abi = _MiniMeTokenSol.MiniMeTokenAbi;
-                params.byteCode = _MiniMeTokenSol.MiniMeTokenByteCode;
-                (0, _runethtx.deploy)(web3, params, cb1);
-            }], function (err, res) {
-                if (err) return cb(err);
-                var minime = new MiniMeToken(web3, res[1].address);
-                cb(null, minime);
             });
+
+            if (cb) {
+                promise.then(function (value) {
+                    cb(null, value);
+                }, function (reason) {
+                    cb(reason);
+                });
+            } else {
+                return promise;
+            }
         }
     }]);
 

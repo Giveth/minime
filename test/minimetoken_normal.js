@@ -51,6 +51,7 @@ describe("MiniMeToken test", () => {
                     owner: ethConnector.accounts[ 1 ],
                     amount: 10,
                     from: ethConnector.accounts[ 0 ],
+                    verbose: true,
                 }, cb);
             },
             (cb) => {
