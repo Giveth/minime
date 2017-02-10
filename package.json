@@ -1,5 +1,5 @@
 {
-  "name": "minime",
+  "name": "minimetoken",
   "version": "0.1.1",
   "description": "MiniMe contract",
   "main": "js/minimetoken.js",
