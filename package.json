@@ -1,8 +1,8 @@
 {
   "name": "minimetoken",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "MiniMe contract",
-  "main": "js/minimetoken.js",
+  "main": "dist/minimetoken.js",
   "directories": {
     "test": "test"
   },
