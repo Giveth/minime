@@ -103,8 +103,6 @@ export default class MiniMeToken {
             params.parentToken = params.parentToken || 0;
             params.parentSnapShotBlock = params.parentSnapShotBlock || 0;
             params.transfersEnabled = (typeof params.transfersEnabled === "undefined") ? true : params.transfersEnabled;
-            console.log("1-> "+JSON.stringify(params, null, 2));
-            console.log("2-> "+typeof params.transfersEnabled);
             async.series([
                 (cb1) => {
                     params.abi = MiniMeTokenFactoryAbi;
