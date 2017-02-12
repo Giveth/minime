@@ -1,6 +1,6 @@
 {
   "name": "minimetoken",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "MiniMe contract",
   "main": "dist/minimetoken.js",
   "directories": {
@@ -36,7 +36,7 @@
     "bignumber.js": "^4.0.0",
     "ethconnector": "0.0.24",
     "lodash": "^4.17.4",
-    "runethtx": "0.0.5"
+    "runethtx": "0.0.6"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",

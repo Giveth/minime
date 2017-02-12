@@ -34,7 +34,7 @@ describe("MiniMeToken test", () => {
             miniMeToken = _miniMeToken;
             done();
         });
-    }).timeout(20000000);
+    }).timeout(20000);
 
     it("Should generate tokens for address 1", (done) => {
         async.series([
@@ -311,7 +311,7 @@ describe("MiniMeToken test", () => {
                     });
             },
         ], done);
-    }).timeout(6000);
+    }).timeout(6000000);
     it("Should move tokens in the clone token from 2 to 3", (done) => {
         async.series([
             (cb) => {
