@@ -200,6 +200,7 @@ contract MiniMeToken is Controlled {
     /// @param _from The address holding the tokens being transferred
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
+    /// @doTransfer _data Extra data to be added in each transfer
     /// @return True if the transfer was successful
     function doTransfer(address _from, address _to, uint _amount, bytes _data
     ) internal returns(bool) {
