@@ -67,6 +67,10 @@ contract Controlled {
     }
 }
 
+contract ERC223Fallback {
+    function tokenFallback(address _from, uint _value, bytes _data);
+}
+
 /// @dev The actual token contract, the default controller is the msg.sender
 ///  that deploys the contract, so usually this token will be deployed by a
 ///  token controller contract, which Giveth will call a "Campaign"
@@ -165,7 +169,7 @@ contract MiniMeToken is Controlled {
     /// @return Whether the transfer was successful or not
     function transfer(address _to, uint256 _amount) returns (bool success) {
         if (!transfersEnabled) throw;
-        return doTransfer(msg.sender, _to, _amount);
+        return doTransfer(msg.sender, _to, _amount, "");
     }
 
     /// @notice Send `_amount` tokens to `_to` from `_from` on the condition it
@@ -188,7 +192,7 @@ contract MiniMeToken is Controlled {
             if (allowed[_from][msg.sender] < _amount) return false;
             allowed[_from][msg.sender] -= _amount;
         }
-        return doTransfer(_from, _to, _amount);
+        return doTransfer(_from, _to, _amount, "");
     }
 
     /// @dev This is the actual transfer function in the token contract, it can
@@ -197,7 +201,7 @@ contract MiniMeToken is Controlled {
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
-    function doTransfer(address _from, address _to, uint _amount
+    function doTransfer(address _from, address _to, uint _amount, bytes _data
     ) internal returns(bool) {
 
            if (_amount == 0) {
@@ -229,8 +233,15 @@ contract MiniMeToken is Controlled {
            var previousBalanceTo = balanceOfAt(_to, block.number);
            updateValueAtNow(balances[_to], previousBalanceTo + _amount);
 
+           if (isContract(_to)) {
+              ERC223Fallback(_to).tokenFallback(_from, _amount, _data);
+           }
+
            // An event to make the transfer easy to find on the blockchain
+
+           // We call two transfers, one for ERC20 and other for ERC223 compatibility
            Transfer(_from, _to, _amount);
+           Transfer(_from, _to, _amount, _data);
 
            return true;
     }
@@ -311,6 +322,21 @@ contract MiniMeToken is Controlled {
     function totalSupply() constant returns (uint) {
         return totalSupplyAt(block.number);
     }
+
+///////////////
+// ERC223 Compatible token
+///////////////
+
+    /// @notice Send `_amount` tokens to `_to` from `msg.sender`
+    /// @param _to The address of the recipient
+    /// @param _amount The amount of tokens to be transferred
+    /// @param _data Extra data to be stored with the transfer
+    /// @return Whether the transfer was successful or not
+    function transfer(address _to, uint256 _amount, bytes _data) returns (bool success) {
+        if (!transfersEnabled) throw;
+        return doTransfer(msg.sender, _to, _amount, _data);
+    }
+
 
 
 ////////////////
@@ -536,10 +562,11 @@ contract MiniMeToken is Controlled {
     }
 
 
-////////////////
+////////////////Transfer
 // Events
 ////////////////
     event Transfer(address indexed _from, address indexed _to, uint256 _amount);
+    event Transfer(address indexed _from, address indexed _to, uint256 _amount, bytes _data);
     event NewCloneToken(address indexed _cloneToken, uint _snapshotBlock);
     event Approval(
         address indexed _owner,
@@ -591,3 +618,4 @@ contract MiniMeTokenFactory {
         return newToken;
     }
 }
+
