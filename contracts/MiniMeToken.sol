@@ -290,8 +290,7 @@ contract MiniMeToken is Controlled {
     /// @return True if the function call was successful
     function approveAndCall(address _spender, uint256 _amount, bytes _extraData
     ) returns (bool success) {
-        allowed[msg.sender][_spender] = _amount;
-        Approval(msg.sender, _spender, _amount);
+        if (!approve(_spender, _amount)) throw;
 
         ApproveAndCallFallBack(_spender).receiveApproval(
             msg.sender,
