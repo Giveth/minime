@@ -227,6 +227,7 @@ contract MiniMeToken is Controlled {
            // Then update the balance array with the new value for the address
            //  receiving the tokens
            var previousBalanceTo = balanceOfAt(_to, block.number);
+           if (previousBalanceTo + _amount < previousBalanceTo) throw; // Check for overflow
            updateValueAtNow(balances[_to], previousBalanceTo + _amount);
 
            // An event to make the transfer easy to find on the blockchain
@@ -428,8 +429,10 @@ contract MiniMeToken is Controlled {
     function generateTokens(address _owner, uint _amount
     ) onlyController returns (bool) {
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
+        if (curTotalSupply + _amount < curTotalSupply) throw; // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         var previousBalanceTo = balanceOf(_owner);
+        if (previousBalanceTo + _amount < previousBalanceTo) throw; // Check for overflow
         updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
         Transfer(0, _owner, _amount);
         return true;
