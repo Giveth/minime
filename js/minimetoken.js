@@ -1,14 +1,14 @@
-import async from "async";
-import BigNumber from "bignumber.js";
-import { deploy, sendContractTx, asyncfunc } from "runethtx";
-import {
+const async = require("async");
+const BigNumber = require("bignumber.js");
+const { deploy, sendContractTx, asyncfunc } = require("runethtx");
+const {
     MiniMeTokenAbi,
     MiniMeTokenByteCode,
     MiniMeTokenFactoryAbi,
     MiniMeTokenFactoryByteCode,
-} from "../contracts/MiniMeToken.sol.js";
+} = require("../contracts/MiniMeToken.sol.js");
 
-export default class MiniMeToken {
+module.exports = class MiniMeToken {
 
     constructor(web3, address) {
         this.web3 = web3;

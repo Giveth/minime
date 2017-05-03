@@ -1,8 +1,8 @@
-import ethConnector from "ethconnector";
-import assert from "assert"; // node.js core module
-import async from "async";
+const ethConnector = require("ethconnector");
+const assert = require("assert"); // node.js core module
+const async = require("async");
 
-import MiniMeToken from "../js/minimetoken";
+const MiniMeToken = require("../js/minimetoken");
 
 const verbose = false;
 
@@ -298,7 +298,7 @@ describe("MiniMeToken test", () => {
             (cb) => {
                 miniMeTokenClone.contract.totalSupplyAt(b[ 4 ], (err, _balance) => {
                     assert.ifError(err);
-                    assert.equal(ethConnector.web3.fromWei(_balance), 0);
+                    assert.equal(ethConnector.web3.fromWei(_balance), 7);
                     cb();
                 });
             },
@@ -306,7 +306,7 @@ describe("MiniMeToken test", () => {
                 miniMeTokenClone.contract.balanceOfAt(ethConnector.accounts[ 2 ], b[ 4 ],
                     (err, _balance) => {
                         assert.ifError(err);
-                        assert.equal(ethConnector.web3.fromWei(_balance), 0);
+                        assert.equal(ethConnector.web3.fromWei(_balance), 1);
                         cb();
                     });
             },
@@ -374,7 +374,7 @@ describe("MiniMeToken test", () => {
                 miniMeTokenClone.contract.balanceOfAt(ethConnector.accounts[ 1 ], b[ 4 ],
                     (err, _balance) => {
                         assert.ifError(err);
-                        assert.equal(ethConnector.web3.fromWei(_balance), 0);
+                        assert.equal(ethConnector.web3.fromWei(_balance), 6);
                         cb();
                     });
             },
@@ -382,7 +382,7 @@ describe("MiniMeToken test", () => {
                 miniMeTokenClone.contract.balanceOfAt(ethConnector.accounts[ 2 ], b[ 4 ],
                     (err, _balance) => {
                         assert.ifError(err);
-                        assert.equal(ethConnector.web3.fromWei(_balance), 0);
+                        assert.equal(ethConnector.web3.fromWei(_balance), 1);
                         cb();
                     });
             },
@@ -398,7 +398,7 @@ describe("MiniMeToken test", () => {
                 miniMeTokenClone.contract.totalSupplyAt(b[ 4 ],
                     (err, _totalSupply) => {
                         assert.ifError(err);
-                        assert.equal(ethConnector.web3.fromWei(_totalSupply), 0);
+                        assert.equal(ethConnector.web3.fromWei(_totalSupply), 7);
                         cb();
                     });
             },
