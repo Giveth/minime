@@ -67,6 +67,10 @@ contract Controlled {
     }
 }
 
+contract ApproveAndCallFallBack {
+    function receiveApproval(address from, uint256 _amount, address _token, bytes _data);
+}
+
 /// @dev The actual token contract, the default controller is the msg.sender
 ///  that deploys the contract, so usually this token will be deployed by a
 ///  token controller contract, which Giveth will call a "Campaign"
@@ -287,23 +291,15 @@ contract MiniMeToken is Controlled {
     /// @return True if the function call was successful
     function approveAndCall(address _spender, uint256 _amount, bytes _extraData
     ) returns (bool success) {
-        allowed[msg.sender][_spender] = _amount;
-        Approval(msg.sender, _spender, _amount);
+        if (!approve(_spender, _amount)) throw;
 
-        // This portion is copied from ConsenSys's Standard Token Contract. It
-        //  calls the receiveApproval function that is part of the contract that
-        //  is being approved (`_spender`). The function should look like:
-        //  `receiveApproval(address _from, uint256 _amount, address
-        //  _tokenContract, bytes _extraData)` It is assumed that the call
-        //  *should* succeed, otherwise the plain vanilla approve would be used
-        if(!_spender.call(
-            bytes4(bytes32(sha3("receiveApproval(address,uint256,address,bytes)"))),
+        ApproveAndCallFallBack(_spender).receiveApproval(
             msg.sender,
             _amount,
             this,
             _extraData
-            )) { throw;
-        }
+        );
+
         return true;
     }
 
