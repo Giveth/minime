@@ -261,7 +261,7 @@ contract MiniMeToken is Controlled {
     /// @param _spender The address of the account able to transfer the tokens
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return True if the approval was successful
-    function approve(address _spender, uint256 _amount) onlyPayloadSize(2) returns (bool success) {
+    function approve(address _spender, uint256 _amount) returns (bool success) {
         if (!transfersEnabled) throw;
 
         // To change the approve amount you first have to reduce the addresses`
