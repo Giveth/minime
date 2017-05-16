@@ -386,7 +386,7 @@ contract MiniMeToken is Controlled {
         uint _snapshotBlock,
         bool _transfersEnabled
         ) returns(address) {
-        if (_snapshotBlock > block.number) _snapshotBlock = block.number;
+        if (_snapshotBlock >= block.number) _snapshotBlock = block.number - 1;
         MiniMeToken cloneToken = tokenFactory.createCloneToken(
             this,
             _snapshotBlock,
