@@ -154,6 +154,9 @@ contract MiniMeToken is Controlled {
         symbol = _tokenSymbol;                             // Set the symbol
         parentToken = MiniMeToken(_parentToken);
         parentSnapShotBlock = _parentSnapShotBlock;
+
+        // Do not allow create cloned tokens in the future.
+        if (parentSnapShotBlock >= block.number) throw;
         transfersEnabled = _transfersEnabled;
         creationBlock = block.number;
     }
