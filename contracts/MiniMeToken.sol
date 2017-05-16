@@ -123,6 +123,15 @@ contract MiniMeToken is Controlled {
     MiniMeTokenFactory public tokenFactory;
 
 ////////////////
+// Modifiers
+////////////////
+
+    modifier onlyPayloadSize(uint numwords) {
+        assert(msg.data.length == numwords * 32 + 4);
+        _;
+    }
+
+////////////////
 // Constructor
 ////////////////
 
@@ -167,7 +176,7 @@ contract MiniMeToken is Controlled {
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return Whether the transfer was successful or not
-    function transfer(address _to, uint256 _amount) returns (bool success) {
+    function transfer(address _to, uint256 _amount) onlyPayloadSize(2) returns (bool success) {
         if (!transfersEnabled) throw;
         return doTransfer(msg.sender, _to, _amount);
     }
@@ -179,7 +188,7 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
     function transferFrom(address _from, address _to, uint256 _amount
-    ) returns (bool success) {
+    ) onlyPayloadSize(3) returns (bool success) {
 
         // The controller of this contract can move tokens around at will,
         //  this is important to recognize! Confirm that you trust the
@@ -412,7 +421,7 @@ contract MiniMeToken is Controlled {
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
     function generateTokens(address _owner, uint _amount
-    ) onlyController returns (bool) {
+    ) onlyController onlyPayloadSize(2) returns (bool) {
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         if (curTotalSupply + _amount < curTotalSupply) throw; // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
@@ -429,7 +438,7 @@ contract MiniMeToken is Controlled {
     /// @param _amount The quantity of tokens to burn
     /// @return True if the tokens are burned correctly
     function destroyTokens(address _owner, uint _amount
-    ) onlyController returns (bool) {
+    ) onlyPayloadSize(2) onlyController returns (bool) {
         uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
         if (curTotalSupply < _amount) throw;
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
