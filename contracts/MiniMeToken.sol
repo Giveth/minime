@@ -154,6 +154,9 @@ contract MiniMeToken is Controlled {
         symbol = _tokenSymbol;                             // Set the symbol
         parentToken = MiniMeToken(_parentToken);
         parentSnapShotBlock = _parentSnapShotBlock;
+
+        // Do not allow create cloned tokens in the future.
+        if (parentSnapShotBlock >= block.number) throw;
         transfersEnabled = _transfersEnabled;
         creationBlock = block.number;
     }
@@ -386,7 +389,7 @@ contract MiniMeToken is Controlled {
         uint _snapshotBlock,
         bool _transfersEnabled
         ) returns(address) {
-        if (_snapshotBlock > block.number) _snapshotBlock = block.number;
+        if (_snapshotBlock >= block.number) _snapshotBlock = block.number - 1;
         MiniMeToken cloneToken = tokenFactory.createCloneToken(
             this,
             _snapshotBlock,
