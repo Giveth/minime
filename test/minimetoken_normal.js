@@ -269,7 +269,7 @@ describe("MiniMeToken test", () => {
                     cloneTokenName: "Clone Token 1",
                     cloneDecimalUnits: 18,
                     cloneTokenSymbol: "MMTc",
-                    snapshotBlock: Number.MAX_SAFE_INTEGER,
+                    snapshotBlock: 0,
                     transfersEnabled: true,
                 }, (err, _miniMeTokenClone) => {
                     assert.ifError(err);
@@ -319,6 +319,7 @@ describe("MiniMeToken test", () => {
                     to: ethConnector.accounts[ 2 ],
                     amount: 4,
                     from: ethConnector.accounts[ 1 ],
+                    gas: 200000,
                 }, cb);
             },
             (cb) => {
@@ -403,7 +404,7 @@ describe("MiniMeToken test", () => {
                     });
             },
         ], done);
-    });
+    }).timeout(6000000);
 
     function log(S) {
         if (verbose) {
