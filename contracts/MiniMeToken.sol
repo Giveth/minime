@@ -271,19 +271,22 @@ contract MiniMeToken is Controlled {
     function approve(address _spender, uint256 _amount) returns (bool success) {
         if (!transfersEnabled) throw;
 
-        // To change the approve amount you first have to wait 30 minutes
-        //  or call approveUnsafe(_spender, _amount)
+        // To change the approve amount you first have to wait 30 minutes,
+        //  call approveUnsafe(_spender, _amount) or first set _amount to 0
         //  to mitigate the race condition described here:
         //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-        if (now - allowed[msg.sender][_spender].timeSpent < 30 minutes) throw;
+        if (_amount != 0 && now - allowed[msg.sender][_spender].timeSpent < 30 minutes) throw;
 
         // Alerts the token controller of the approve function call
         if (isContract(controller)) {
             if (!TokenController(controller).onApprove(msg.sender, _spender, _amount))
                 throw;
         }
-
-        allowed[msg.sender][_spender].amount = _amount;
+        if(_amount > 0){
+            allowed[msg.sender][_spender].amount = _amount;
+        } else {
+            delete allowed[msg.sender][_spender];
+        }
         Approval(msg.sender, _spender, _amount);
         return true;
     }
