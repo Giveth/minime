@@ -237,7 +237,9 @@ module.exports = function () {
                 async.series([function (cb1) {
                     params.abi = MiniMeTokenFactoryAbi;
                     params.byteCode = MiniMeTokenFactoryByteCode;
+                    console.log("yyyy");
                     _deploy(web3, params, function (err, _tokenFactory) {
+                        console.log("ERROR2: ", err);
                         if (err) {
                             cb1(err);
                             return;
@@ -246,6 +248,7 @@ module.exports = function () {
                         cb1();
                     });
                 }, function (cb1) {
+                    console.log("zzzz");
                     params.abi = MiniMeTokenAbi;
                     params.byteCode = MiniMeTokenByteCode;
                     _deploy(web3, params, cb1);

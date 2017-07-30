@@ -417,9 +417,9 @@ contract MiniMeToken is Controlled {
     ) onlyController returns (bool) {
         uint curTotalSupply = totalSupply();
         if (curTotalSupply + _amount < curTotalSupply) throw; // Check for overflow
-        updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
-        var previousBalanceTo = balanceOf(_owner);
+        uint previousBalanceTo = balanceOf(_owner);
         if (previousBalanceTo + _amount < previousBalanceTo) throw; // Check for overflow
+        updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
         Transfer(0, _owner, _amount);
         return true;
@@ -434,9 +434,9 @@ contract MiniMeToken is Controlled {
     ) onlyController returns (bool) {
         uint curTotalSupply = totalSupply();
         if (curTotalSupply < _amount) throw;
-        updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
-        var previousBalanceFrom = balanceOf(_owner);
+        uint previousBalanceFrom = balanceOf(_owner);
         if (previousBalanceFrom < _amount) throw;
+        updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
         updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
         Transfer(_owner, 0, _amount);
         return true;
