@@ -78,6 +78,7 @@ describe("MiniMeToken test", () => {
                     to: ethConnector.accounts[ 2 ],
                     from: ethConnector.accounts[ 1 ],
                     amount: 2,
+                    extraGas: 30000,
                 }, cb);
             },
             (cb) => {
@@ -116,6 +117,7 @@ describe("MiniMeToken test", () => {
                     spender: ethConnector.accounts[ 3 ],
                     amount: 2,
                     from: ethConnector.accounts[ 2 ],
+                    extraGas: 20000,
                 }, cb);
             },
             (cb) => {
@@ -261,7 +263,6 @@ describe("MiniMeToken test", () => {
             },
         ], done);
     });
-
     it("Should Create the clone token", (done) => {
         async.series([
             (cb) => {
@@ -312,6 +313,14 @@ describe("MiniMeToken test", () => {
             },
         ], done);
     }).timeout(6000000);
+    it("Should mine one block to take effect clone", (done) => {
+        miniMeToken.transfer({
+            to: ethConnector.accounts[ 1 ],
+            from: ethConnector.accounts[ 1 ],
+            amount: 1,
+            extraGas: 30000,
+        }, done);
+    });
     it("Should move tokens in the clone token from 2 to 3", (done) => {
         async.series([
             (cb) => {
@@ -319,7 +328,7 @@ describe("MiniMeToken test", () => {
                     to: ethConnector.accounts[ 2 ],
                     amount: 4,
                     from: ethConnector.accounts[ 1 ],
-                    gas: 200000,
+                    extraGas: 200000,
                 }, cb);
             },
             (cb) => {
@@ -405,6 +414,27 @@ describe("MiniMeToken test", () => {
             },
         ], done);
     }).timeout(6000000);
+    it("Should create tokens in the child token", (done) => {
+        async.series([
+            (cb) => {
+                miniMeTokenClone.generateTokens({
+                    owner: ethConnector.accounts[ 1 ],
+                    amount: 10,
+                    from: ethConnector.accounts[ 0 ],
+                    extraGas: 300000,
+                }, cb);
+            },
+            (cb) => {
+                miniMeTokenClone.getState((err, _st) => {
+                    assert.ifError(err);
+                    assert.equal(_st.totalSupply, 17);
+                    assert.equal(_st.balances[ ethConnector.accounts[ 1 ] ], 12);
+                    assert.equal(_st.balances[ ethConnector.accounts[ 2 ] ], 5);
+                    cb();
+                });
+            },
+        ], done);
+    });
 
     function log(S) {
         if (verbose) {

@@ -1,33 +1,29 @@
 "use strict";
 
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _async = require("async");
-
-var _async2 = _interopRequireDefault(_async);
-
-var _bignumber = require("bignumber.js");
-
-var _bignumber2 = _interopRequireDefault(_bignumber);
-
-var _runethtx = require("runethtx");
-
-var _MiniMeTokenSol = require("../contracts/MiniMeToken.sol.js");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var MiniMeToken = function () {
+var async = require("async");
+var BigNumber = require("bignumber.js");
+
+var _require = require("runethtx"),
+    _deploy = _require.deploy,
+    sendContractTx = _require.sendContractTx,
+    asyncfunc = _require.asyncfunc;
+
+var _require2 = require("../contracts/MiniMeToken.sol.js"),
+    MiniMeTokenAbi = _require2.MiniMeTokenAbi,
+    MiniMeTokenByteCode = _require2.MiniMeTokenByteCode,
+    MiniMeTokenFactoryAbi = _require2.MiniMeTokenFactoryAbi,
+    MiniMeTokenFactoryByteCode = _require2.MiniMeTokenFactoryByteCode;
+
+module.exports = function () {
     function MiniMeToken(web3, address) {
         _classCallCheck(this, MiniMeToken);
 
         this.web3 = web3;
-        this.contract = this.web3.eth.contract(_MiniMeTokenSol.MiniMeTokenAbi).at(address);
+        this.contract = this.web3.eth.contract(MiniMeTokenAbi).at(address);
     }
 
     _createClass(MiniMeToken, [{
@@ -35,12 +31,12 @@ var MiniMeToken = function () {
         value: function getState(_cb) {
             var _this = this;
 
-            return (0, _runethtx.asyncfunc)(function (cb) {
+            return asyncfunc(function (cb) {
                 var st = {
                     balances: {}
                 };
                 var accounts = void 0;
-                _async2.default.series([function (cb1) {
+                async.series([function (cb1) {
                     _this.contract.name(function (err, _name) {
                         if (err) {
                             cb1(err);return;
@@ -77,7 +73,7 @@ var MiniMeToken = function () {
                         if (err) {
                             cb1(err);return;
                         }
-                        st.totalSupply = _totalSupply.div(new _bignumber2.default(10).pow(st.decimals)).toNumber();
+                        st.totalSupply = _totalSupply.div(new BigNumber(10).pow(st.decimals)).toNumber();
                         cb1();
                     });
                 }, function (cb1) {
@@ -97,12 +93,12 @@ var MiniMeToken = function () {
                         cb1();
                     });
                 }, function (cb1) {
-                    _async2.default.eachSeries(accounts, function (account, cb2) {
+                    async.eachSeries(accounts, function (account, cb2) {
                         _this.contract.balanceOf(account, function (err, res) {
                             if (err) {
                                 cb2(err);return;
                             }
-                            st.balances[account] = res.div(new _bignumber2.default(10).pow(st.decimals)).toNumber();
+                            st.balances[account] = res.div(new BigNumber(10).pow(st.decimals)).toNumber();
                             cb2();
                         });
                     }, cb1);
@@ -116,8 +112,8 @@ var MiniMeToken = function () {
         value: function createCloneToken(opts, _cb) {
             var _this2 = this;
 
-            return (0, _runethtx.asyncfunc)(function (cb) {
-                (0, _runethtx.sendContractTx)(_this2.web3, _this2.contract, "createCloneToken", opts, function (err2, txHash) {
+            return asyncfunc(function (cb) {
+                sendContractTx(_this2.web3, _this2.contract, "createCloneToken", opts, function (err2, txHash) {
                     if (err2) {
                         cb(err2);
                         return;
@@ -155,15 +151,15 @@ var MiniMeToken = function () {
         value: function convertAmountAndSend(method, opts, _cb) {
             var _this3 = this;
 
-            return (0, _runethtx.asyncfunc)(function (cb) {
+            return asyncfunc(function (cb) {
                 _this3.contract.decimals(function (err, _decimals) {
                     if (err) {
                         cb(err);
                         return;
                     }
                     var params = Object.assign({}, opts);
-                    params.amount = new _bignumber2.default(10).pow(_decimals).mul(params.amount);
-                    (0, _runethtx.sendContractTx)(_this3.web3, _this3.contract, method, params, function (err2, txHash) {
+                    params.amount = new BigNumber(10).pow(_decimals).mul(params.amount);
+                    sendContractTx(_this3.web3, _this3.contract, method, params, function (err2, txHash) {
                         if (err2) {
                             cb(err2);
                             return;
@@ -200,10 +196,10 @@ var MiniMeToken = function () {
         value: function allowance(opts, _cb) {
             var _this4 = this;
 
-            return (0, _runethtx.asyncfunc)(function (cb) {
+            return asyncfunc(function (cb) {
                 var decimals = void 0;
                 var allowance = void 0;
-                _async2.default.series([function (cb1) {
+                async.series([function (cb1) {
                     _this4.contract.decimals(function (err, _decimals) {
                         if (err) {
                             cb1(err);
@@ -218,7 +214,7 @@ var MiniMeToken = function () {
                             cb1(err);
                             return;
                         }
-                        allowance = res.div(new _bignumber2.default(10).pow(decimals)).toNumber();
+                        allowance = res.div(new BigNumber(10).pow(decimals)).toNumber();
                         cb1();
                     });
                 }], function (err2) {
@@ -233,15 +229,15 @@ var MiniMeToken = function () {
     }], [{
         key: "deploy",
         value: function deploy(web3, opts, _cb) {
-            return (0, _runethtx.asyncfunc)(function (cb) {
+            return asyncfunc(function (cb) {
                 var params = Object.assign({}, opts);
                 params.parentToken = params.parentToken || 0;
                 params.parentSnapShotBlock = params.parentSnapShotBlock || 0;
                 params.transfersEnabled = typeof params.transfersEnabled === "undefined" ? true : params.transfersEnabled;
-                _async2.default.series([function (cb1) {
-                    params.abi = _MiniMeTokenSol.MiniMeTokenFactoryAbi;
-                    params.byteCode = _MiniMeTokenSol.MiniMeTokenFactoryByteCode;
-                    (0, _runethtx.deploy)(web3, params, function (err, _tokenFactory) {
+                async.series([function (cb1) {
+                    params.abi = MiniMeTokenFactoryAbi;
+                    params.byteCode = MiniMeTokenFactoryByteCode;
+                    _deploy(web3, params, function (err, _tokenFactory) {
                         if (err) {
                             cb1(err);
                             return;
@@ -250,9 +246,9 @@ var MiniMeToken = function () {
                         cb1();
                     });
                 }, function (cb1) {
-                    params.abi = _MiniMeTokenSol.MiniMeTokenAbi;
-                    params.byteCode = _MiniMeTokenSol.MiniMeTokenByteCode;
-                    (0, _runethtx.deploy)(web3, params, cb1);
+                    params.abi = MiniMeTokenAbi;
+                    params.byteCode = MiniMeTokenByteCode;
+                    _deploy(web3, params, cb1);
                 }], function (err, res) {
                     if (err) {
                         cb(err);
@@ -267,6 +263,3 @@ var MiniMeToken = function () {
 
     return MiniMeToken;
 }();
-
-exports.default = MiniMeToken;
-module.exports = exports["default"];
