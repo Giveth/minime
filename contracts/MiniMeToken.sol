@@ -415,7 +415,7 @@ contract MiniMeToken is Controlled {
     /// @return True if the tokens are generated correctly
     function generateTokens(address _owner, uint _amount
     ) onlyController returns (bool) {
-        uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
+        uint curTotalSupply = totalSupply();
         if (curTotalSupply + _amount < curTotalSupply) throw; // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         var previousBalanceTo = balanceOf(_owner);
@@ -432,7 +432,7 @@ contract MiniMeToken is Controlled {
     /// @return True if the tokens are burned correctly
     function destroyTokens(address _owner, uint _amount
     ) onlyController returns (bool) {
-        uint curTotalSupply = getValueAt(totalSupplyHistory, block.number);
+        uint curTotalSupply = totalSupply();
         if (curTotalSupply < _amount) throw;
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
         var previousBalanceFrom = balanceOf(_owner);
