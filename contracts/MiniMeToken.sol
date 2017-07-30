@@ -93,7 +93,20 @@ contract MiniMeToken is Controlled {
         // `value` is the amount of tokens at a specific block number
         uint128 value;
     }
+    
 
+    /// @dev `Allowance` structure holds block number of allowance spent 
+    ///  and the amount allowed
+    struct Allowance { 
+        
+        // `amount` to be spent
+        uint amount;
+
+        // `blockSpent` is for blocking change of allowance near spent block 
+        //  to prevent race conditions 
+        uint timeSpent;
+    }
+    
     // `parentToken` is the Token address that was cloned to produce this token;
     //  it will be 0x0 for a token that was not cloned
     MiniMeToken public parentToken;
@@ -111,7 +124,7 @@ contract MiniMeToken is Controlled {
     mapping (address => Checkpoint[]) balances;
 
     // `allowed` tracks any extra transfer rights as in all ERC20 tokens
-    mapping (address => mapping (address => uint256)) allowed;
+    mapping (address => mapping (address => Allowance)) allowed;
 
     // Tracks the history of the `totalSupply` of the token
     Checkpoint[] totalSupplyHistory;
@@ -189,8 +202,9 @@ contract MiniMeToken is Controlled {
             if (!transfersEnabled) throw;
 
             // The standard ERC 20 transferFrom functionality
-            if (allowed[_from][msg.sender] < _amount) return false;
-            allowed[_from][msg.sender] -= _amount;
+            if (allowed[_from][msg.sender].amount < _amount) return false;
+            allowed[_from][msg.sender].amount -= _amount;
+            allowed[_from][msg.sender].timeSpent = now;
         }
         return doTransfer(_from, _to, _amount);
     }
@@ -222,8 +236,8 @@ contract MiniMeToken is Controlled {
 
            // Alerts the token controller of the transfer
            if (isContract(controller)) {
-               if (!TokenController(controller).onTransfer(_from, _to, _amount))
-               throw;
+                if (!TokenController(controller).onTransfer(_from, _to, _amount))
+                    throw;
            }
 
            // First update the balance array with the new value for the address
@@ -257,21 +271,37 @@ contract MiniMeToken is Controlled {
     function approve(address _spender, uint256 _amount) returns (bool success) {
         if (!transfersEnabled) throw;
 
-        // To change the approve amount you first have to reduce the addresses`
-        //  allowance to zero by calling `approve(_spender,0)` if it is not
-        //  already 0 to mitigate the race condition described here:
+        // To change the approve amount you first have to wait 30 minutes,
+        //  call approveUnsafe(_spender, _amount) or first set _amount to 0
+        //  to mitigate the race condition described here:
         //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-        if ((_amount!=0) && (allowed[msg.sender][_spender] !=0)) throw;
+        if (_amount != 0 && now - allowed[msg.sender][_spender].timeSpent < 30 minutes) throw;
 
         // Alerts the token controller of the approve function call
         if (isContract(controller)) {
             if (!TokenController(controller).onApprove(msg.sender, _spender, _amount))
                 throw;
         }
-
-        allowed[msg.sender][_spender] = _amount;
+        if(_amount > 0){
+            allowed[msg.sender][_spender].amount = _amount;
+        } else {
+            delete allowed[msg.sender][_spender];
+        }
         Approval(msg.sender, _spender, _amount);
         return true;
+    }
+
+    // @notice This function should be used only if you know what you doing.
+    function approveUnsafe(address _spender, uint _amount) returns (bool success) {
+        allowed[msg.sender][_spender].timeSpent = 0;
+        return approve(_spender, _amount);
+    }
+
+    // @notice This function should be used only if you know what you doing.
+    function approveAndCallUnsafe(address _spender, uint _amount, bytes _extraData
+    ) returns (bool success) {
+        allowed[msg.sender][_spender].timeSpent = 0;
+        return approveAndCall(_spender, _amount, _extraData);
     }
 
     /// @dev This function makes it easy to read the `allowed[]` map
@@ -281,7 +311,7 @@ contract MiniMeToken is Controlled {
     ///  to spend
     function allowance(address _owner, address _spender
     ) constant returns (uint256 remaining) {
-        return allowed[_owner][_spender];
+        return allowed[_owner][_spender].amount;
     }
 
     /// @notice `msg.sender` approves `_spender` to send `_amount` tokens on
