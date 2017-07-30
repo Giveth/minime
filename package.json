@@ -36,7 +36,7 @@
     "bignumber.js": "^4.0.0",
     "ethconnector": "0.0.24",
     "lodash": "^4.17.4",
-    "runethtx": "0.0.6"
+    "runethtx": "0.0.7"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",

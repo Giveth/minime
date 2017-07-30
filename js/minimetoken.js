@@ -244,4 +244,4 @@ module.exports = class MiniMeToken {
             });
         }, _cb);
     }
-}
+};
