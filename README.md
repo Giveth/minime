@@ -63,7 +63,7 @@ All these applications and more are enabled by the MiniMe Token Contract. The mo
 
 1. Deploy the MinimeTokenFactory
 2. Deploy the MinimeToken
-3. Deploy the campaig
+3. Deploy the campaign
 4. Assign the controller of the MinimeToken to the campaign.
 
 
