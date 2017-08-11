@@ -1,5 +1,7 @@
 pragma solidity ^0.4.13;
 
+import './ISnapshotTokenParent.sol';
+import './ITokenController.sol';
 import './MiniMeToken.sol';
 
 ////////////////
@@ -14,7 +16,7 @@ contract MiniMeTokenFactory {
     /// @notice Update the DApp by creating a new token with new functionalities
     ///  the msg.sender becomes the controller of this clone token
     /// @param _parentToken Address of the token being cloned
-    /// @param _snapshotBlock Block of the parent token that will
+    /// @param _snapshot Block of the parent token that will
     ///  determine the initial distribution of the clone token
     /// @param _tokenName Name of the new token
     /// @param _decimalUnits Number of decimals of the new token
@@ -22,8 +24,8 @@ contract MiniMeTokenFactory {
     /// @param _transfersEnabled If true, tokens will be able to be transferred
     /// @return The address of the new token contract
     function createCloneToken(
-        address _parentToken,
-        uint _snapshotBlock,
+        ISnapshotTokenParent _parentToken,
+        uint _snapshot,
         string _tokenName,
         uint8 _decimalUnits,
         string _tokenSymbol,
@@ -32,14 +34,14 @@ contract MiniMeTokenFactory {
         MiniMeToken newToken = new MiniMeToken(
             this,
             _parentToken,
-            _snapshotBlock,
+            _snapshot,
             _tokenName,
             _decimalUnits,
             _tokenSymbol,
             _transfersEnabled
             );
 
-        newToken.changeController(msg.sender);
+        newToken.changeController(ITokenController(msg.sender));
         return newToken;
     }
 }
