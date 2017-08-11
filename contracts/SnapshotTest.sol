@@ -6,6 +6,11 @@ contract SnapshotTest is Snapshot {
 
     Values[] myNumber;
 
+    function SnapshotTest()
+        Snapshot(0)
+    {
+    }
+
     function create()
         external
         returns (uint256)
