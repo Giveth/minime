@@ -1,5 +1,10 @@
 pragma solidity 0.4.11;
 
+import './Controlled.sol';
+import './TokenController.sol';
+import './ApproveAndCallFallback.sol';
+import './MiniMeTokenFactory.sol';
+
 /*
     Copyright 2016, Jordi Baylina
 
