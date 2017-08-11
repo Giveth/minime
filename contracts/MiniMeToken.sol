@@ -4,6 +4,7 @@ import './Controlled.sol';
 import './TokenController.sol';
 import './ApproveAndCallFallback.sol';
 import './MiniMeTokenFactory.sol';
+import './Snapshot.sol';
 
 /*
     Copyright 2016, Jordi Baylina
@@ -34,25 +35,12 @@ import './MiniMeTokenFactory.sol';
 /// @dev The actual token contract, the default controller is the msg.sender
 ///  that deploys the contract, so usually this token will be deployed by a
 ///  token controller contract, which Giveth will call a "Campaign"
-contract MiniMeToken is Controlled {
+contract MiniMeToken is Controlled, Snapshot {
 
     string public name;                //The Token's name: e.g. DigixDAO Tokens
     uint8 public decimals;             //Number of decimals of the smallest unit
     string public symbol;              //An identifier: e.g. REP
     string public version = 'MMT_0.1'; //An arbitrary versioning scheme
-
-
-    /// @dev `Checkpoint` is the structure that attaches a block number to a
-    ///  given value, the block number attached is the one that last changed the
-    ///  value
-    struct  Checkpoint {
-
-        // `fromBlock` is the block number that the value was generated from
-        uint128 fromBlock;
-
-        // `value` is the amount of tokens at a specific block number
-        uint128 value;
-    }
 
     // `parentToken` is the Token address that was cloned to produce this token;
     //  it will be 0x0 for a token that was not cloned
@@ -60,7 +48,7 @@ contract MiniMeToken is Controlled {
 
     // `parentSnapShotBlock` is the block number from the Parent Token that was
     //  used to determine the initial distribution of the Clone Token
-    uint public parentSnapShotBlock;
+    uint public parentSnapshot;
 
     // `creationBlock` is the block number that the Clone Token was created
     uint public creationBlock;
@@ -68,13 +56,13 @@ contract MiniMeToken is Controlled {
     // `balances` is the map that tracks the balance of each address, in this
     //  contract when the balance changes the block number that the change
     //  occurred is also included in the map
-    mapping (address => Checkpoint[]) balances;
+    mapping (address => Values[]) balances;
 
     // `allowed` tracks any extra transfer rights as in all ERC20 tokens
     mapping (address => mapping (address => uint256)) allowed;
 
     // Tracks the history of the `totalSupply` of the token
-    Checkpoint[] totalSupplyHistory;
+    Values[] totalSupplyHistory;
 
     // Flag that determines if the token is transferable or not.
     bool public transfersEnabled;
@@ -92,7 +80,7 @@ contract MiniMeToken is Controlled {
     ///  deployed first
     /// @param _parentToken Address of the parent token, set to 0x0 if it is a
     ///  new token
-    /// @param _parentSnapShotBlock Block of the parent token that will
+    /// @param _parentSnapshot Block of the parent token that will
     ///  determine the initial distribution of the clone token, set to 0 if it
     ///  is a new token
     /// @param _tokenName Name of the new token
@@ -102,7 +90,7 @@ contract MiniMeToken is Controlled {
     function MiniMeToken(
         address _tokenFactory,
         address _parentToken,
-        uint _parentSnapShotBlock,
+        uint _parentSnapshot,
         string _tokenName,
         uint8 _decimalUnits,
         string _tokenSymbol,
@@ -113,7 +101,7 @@ contract MiniMeToken is Controlled {
         decimals = _decimalUnits;                          // Set the decimals
         symbol = _tokenSymbol;                             // Set the symbol
         parentToken = MiniMeToken(_parentToken);
-        parentSnapShotBlock = _parentSnapShotBlock;
+        parentSnapshot = _parentSnapshot;
         transfersEnabled = _transfersEnabled;
         creationBlock = block.number;
     }
@@ -168,7 +156,7 @@ contract MiniMeToken is Controlled {
                return true;
            }
 
-           require(parentSnapShotBlock < block.number);
+           require(parentSnapshot < block.number);
 
            // Do not allow transfer to 0x0 or the token contract itself
            require((_to != 0) && (_to != address(this)));
@@ -187,13 +175,13 @@ contract MiniMeToken is Controlled {
 
            // First update the balance array with the new value for the address
            //  sending the tokens
-           updateValueAtNow(balances[_from], previousBalanceFrom - _amount);
+           setValue(balances[_from], previousBalanceFrom - _amount);
 
            // Then update the balance array with the new value for the address
            //  receiving the tokens
            var previousBalanceTo = balanceOfAt(_to, block.number);
            require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
-           updateValueAtNow(balances[_to], previousBalanceTo + _amount);
+           setValue(balances[_to], previousBalanceTo + _amount);
 
            // An event to make the transfer easy to find on the blockchain
            Transfer(_from, _to, _amount);
@@ -274,55 +262,53 @@ contract MiniMeToken is Controlled {
 // Query balance and totalSupply in History
 ////////////////
 
-    /// @dev Queries the balance of `_owner` at a specific `_blockNumber`
+    /// @dev Queries the balance of `_owner` at a specific `_snapshot`
     /// @param _owner The address from which the balance will be retrieved
-    /// @param _blockNumber The block number when the balance is queried
-    /// @return The balance at `_blockNumber`
-    function balanceOfAt(address _owner, uint _blockNumber) constant
-        returns (uint) {
+    /// @param _snapshot The block number when the balance is queried
+    /// @return The balance at `_snapshot`
+    function balanceOfAt(address _owner, uint _snapshot)
+        constant
+        returns (uint)
+    {
+        Values[] storage values = balances[_owner];
 
-        // These next few lines are used when the balance of the token is
-        //  requested before a check point was ever created for this token, it
-        //  requires that the `parentToken.balanceOfAt` be queried at the
-        //  genesis block for that token as this contains initial balance of
-        //  this token
-        if ((balances[_owner].length == 0)
-            || (balances[_owner][0].fromBlock > _blockNumber)) {
-            if (address(parentToken) != 0) {
-                return parentToken.balanceOfAt(_owner, min(_blockNumber, parentSnapShotBlock));
-            } else {
-                // Has no parent
-                return 0;
-            }
-
-        // This will return the expected balance during normal situations
-        } else {
-            return getValueAt(balances[_owner], _blockNumber);
+        // If there is a value, return it
+        if (hasValueAt(values, _snapshot)) {
+            return getValueAt(values, _snapshot, 0);
         }
+
+        // Try parent contract at the fork
+        if (address(parentToken) != 0) {
+            // TODO: Make snapshot numbers continue over the fork,
+            // be sure to use `min(_snapshot, parentSnapshot)`
+            return parentToken.balanceOfAt(_owner, parentSnapshot);
+        }
+
+        // Default to an empty balance
+        return 0;
     }
 
-    /// @notice Total amount of tokens at a specific `_blockNumber`.
-    /// @param _blockNumber The block number when the totalSupply is queried
-    /// @return The total amount of tokens at `_blockNumber`
-    function totalSupplyAt(uint _blockNumber) constant returns(uint) {
+    /// @notice Total amount of tokens at a specific `_snapshot`.
+    /// @param _snapshot The block number when the totalSupply is queried
+    /// @return The total amount of tokens at `_snapshot`
+    function totalSupplyAt(uint _snapshot)
+        constant
+        returns(uint)
+    {
+        Values[] storage values = totalSupplyHistory;
 
-        // These next few lines are used when the totalSupply of the token is
-        //  requested before a check point was ever created for this token, it
-        //  requires that the `parentToken.totalSupplyAt` be queried at the
-        //  genesis block for this token as that contains totalSupply of this
-        //  token at this block number.
-        if ((totalSupplyHistory.length == 0)
-            || (totalSupplyHistory[0].fromBlock > _blockNumber)) {
-            if (address(parentToken) != 0) {
-                return parentToken.totalSupplyAt(min(_blockNumber, parentSnapShotBlock));
-            } else {
-                return 0;
-            }
-
-        // This will return the expected totalSupply during normal situations
-        } else {
-            return getValueAt(totalSupplyHistory, _blockNumber);
+        // If there is a value, return it
+        if (hasValueAt(values, _snapshot)) {
+            return getValueAt(values, _snapshot, 0);
         }
+
+        // Try parent contract at the fork
+        if (address(parentToken) != 0) {
+            return parentToken.totalSupplyAt(parentSnapshot);
+        }
+
+        // Default to an empty balance
+        return 0;
     }
 
 ////////////////
@@ -377,8 +363,8 @@ contract MiniMeToken is Controlled {
         require(curTotalSupply + _amount >= curTotalSupply); // Check for overflow
         uint previousBalanceTo = balanceOf(_owner);
         require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
-        updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
-        updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
+        setValue(totalSupplyHistory, curTotalSupply + _amount);
+        setValue(balances[_owner], previousBalanceTo + _amount);
         Transfer(0, _owner, _amount);
         return true;
     }
@@ -394,8 +380,8 @@ contract MiniMeToken is Controlled {
         require(curTotalSupply >= _amount);
         uint previousBalanceFrom = balanceOf(_owner);
         require(previousBalanceFrom >= _amount);
-        updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
-        updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
+        setValue(totalSupplyHistory, curTotalSupply - _amount);
+        setValue(balances[_owner], previousBalanceFrom - _amount);
         Transfer(_owner, 0, _amount);
         return true;
     }
@@ -414,50 +400,6 @@ contract MiniMeToken is Controlled {
 ////////////////
 // Internal helper functions to query and set a value in a snapshot array
 ////////////////
-
-    /// @dev `getValueAt` retrieves the number of tokens at a given block number
-    /// @param checkpoints The history of values being queried
-    /// @param _block The block number to retrieve the value at
-    /// @return The number of tokens being queried
-    function getValueAt(Checkpoint[] storage checkpoints, uint _block
-    ) constant internal returns (uint) {
-        if (checkpoints.length == 0) return 0;
-
-        // Shortcut for the actual value
-        if (_block >= checkpoints[checkpoints.length-1].fromBlock)
-            return checkpoints[checkpoints.length-1].value;
-        if (_block < checkpoints[0].fromBlock) return 0;
-
-        // Binary search of the value in the array
-        uint min = 0;
-        uint max = checkpoints.length-1;
-        while (max > min) {
-            uint mid = (max + min + 1)/ 2;
-            if (checkpoints[mid].fromBlock<=_block) {
-                min = mid;
-            } else {
-                max = mid-1;
-            }
-        }
-        return checkpoints[min].value;
-    }
-
-    /// @dev `updateValueAtNow` used to update the `balances` map and the
-    ///  `totalSupplyHistory`
-    /// @param checkpoints The history of data being updated
-    /// @param _value The new number of tokens
-    function updateValueAtNow(Checkpoint[] storage checkpoints, uint _value
-    ) internal  {
-        if ((checkpoints.length == 0)
-        || (checkpoints[checkpoints.length -1].fromBlock < block.number)) {
-               Checkpoint storage newCheckPoint = checkpoints[ checkpoints.length++ ];
-               newCheckPoint.fromBlock =  uint128(block.number);
-               newCheckPoint.value = uint128(_value);
-           } else {
-               Checkpoint storage oldCheckPoint = checkpoints[checkpoints.length-1];
-               oldCheckPoint.value = uint128(_value);
-           }
-    }
 
     /// @dev Internal function to determine if an address is a contract
     /// @param _addr The address being queried
