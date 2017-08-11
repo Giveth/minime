@@ -120,7 +120,7 @@ contract MiniMeToken is
     }
 
 ///////////////////
-// ERC20 Methods
+// Public functions
 ///////////////////
 
     /// @notice Send `_amount` tokens to `_to` from `msg.sender`
@@ -133,45 +133,6 @@ contract MiniMeToken is
         returns (bool success)
     {
         return transfer(msg.sender, _to, _amount);
-    }
-
-    /// @dev This is the actual transfer function in the token contract, it can
-    ///  only be called by other functions in this contract.
-    /// @param _from The address holding the tokens being transferred
-    /// @param _to The address of the recipient
-    /// @param _amount The amount of tokens to be transferred
-    /// @return True if the transfer was successful
-    /// Implements the abstract function from AllowanceBase
-    function allowanceBaseTransfer(address _from, address _to, uint _amount)
-        internal
-        returns(bool)
-    {
-        return transfer(_from, _to, _amount);
-    }
-
-    /// @dev This is the actual transfer function in the token contract, it can
-    ///  only be called by other functions in this contract.
-    /// @param _from The address holding the tokens being transferred
-    /// @param _to The address of the recipient
-    /// @param _amount The amount of tokens to be transferred
-    /// @return True if the transfer was successful
-    /// Implements the abstract function from AllowanceBase
-    function transfer(address _from, address _to, uint _amount)
-        internal
-        returns(bool)
-    {
-        require(transfersEnabled);
-
-        // Alerts the token controller of the transfer
-        if (isContract(controller)) {
-            require(controller.onTransfer(_from, _to, _amount));
-        }
-
-        // Do not allow transfer to 0x0 or the token contract itself
-        require(_to != 0);
-        require(_to != address(this));
-
-        return snapshotBaseTransfer(_from, _to, _amount);
     }
 
     /// @notice `msg.sender` approves `_spender` to spend `_amount` tokens on
@@ -239,7 +200,10 @@ contract MiniMeToken is
         string _cloneTokenSymbol,
         uint _snapshotBlock,
         bool _transfersEnabled
-        ) returns(address) {
+    )
+        public
+        returns(address)
+    {
         if (_snapshotBlock == 0) _snapshotBlock = block.number;
         MiniMeToken cloneToken = tokenFactory.createCloneToken(
             this,
@@ -256,6 +220,20 @@ contract MiniMeToken is
         NewCloneToken(address(cloneToken), _snapshotBlock);
         return address(cloneToken);
     }
+
+////////////////
+// Enable tokens transfers
+////////////////
+
+    /// @notice Enables token holders to transfer their tokens freely if true
+    /// @param _transfersEnabled True if transfers are allowed in the clone
+    function enableTransfers(bool _transfersEnabled)
+        public
+        onlyController
+    {
+        transfersEnabled = _transfersEnabled;
+    }
+
 
 ////////////////
 // Generate and destroy tokens
@@ -286,16 +264,45 @@ contract MiniMeToken is
     }
 
 ////////////////
-// Enable tokens transfers
+// Internal functions
 ////////////////
 
-    /// @notice Enables token holders to transfer their tokens freely if true
-    /// @param _transfersEnabled True if transfers are allowed in the clone
-    function enableTransfers(bool _transfersEnabled)
-        public
-        onlyController
+    /// @dev This is the actual transfer function in the token contract, it can
+    ///  only be called by other functions in this contract.
+    /// @param _from The address holding the tokens being transferred
+    /// @param _to The address of the recipient
+    /// @param _amount The amount of tokens to be transferred
+    /// @return True if the transfer was successful
+    /// Implements the abstract function from AllowanceBase
+    function allowanceBaseTransfer(address _from, address _to, uint _amount)
+        internal
+        returns(bool)
     {
-        transfersEnabled = _transfersEnabled;
+        return transfer(_from, _to, _amount);
     }
 
+    /// @dev This is the actual transfer function in the token contract, it can
+    ///  only be called by other functions in this contract.
+    /// @param _from The address holding the tokens being transferred
+    /// @param _to The address of the recipient
+    /// @param _amount The amount of tokens to be transferred
+    /// @return True if the transfer was successful
+    /// Implements the abstract function from AllowanceBase
+    function transfer(address _from, address _to, uint _amount)
+        internal
+        returns(bool)
+    {
+        require(transfersEnabled);
+
+        // Alerts the token controller of the transfer
+        if (isContract(controller)) {
+            require(controller.onTransfer(_from, _to, _amount));
+        }
+
+        // Do not allow transfer to 0x0 or the token contract itself
+        require(_to != 0);
+        require(_to != address(this));
+
+        return snapshotBaseTransfer(_from, _to, _amount);
+    }
 }
