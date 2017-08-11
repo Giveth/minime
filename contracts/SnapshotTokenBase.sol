@@ -1,13 +1,20 @@
 pragma solidity ^0.4.13;
 
 import './Snapshot.sol';
+import './ISnapshotToken.sol';
+import './ISnapshotTokenParent.sol';
+import './Helpers.sol';
 
-
-contract SnapshotTokenBase is Snapshot {
+contract SnapshotTokenBase is
+    ISnapshotToken,
+    ISnapshotTokenParent,
+    Snapshot,
+    Helpers
+{
 
     // `parentToken` is the Token address that was cloned to produce this token;
     //  it will be 0x0 for a token that was not cloned
-    SnapshotTokenBase public parentToken;
+    ISnapshotTokenParent public parentToken;
 
     // `parentSnapShotBlock` is the block number from the Parent Token that was
     //  used to determine the initial distribution of the Clone Token
@@ -35,13 +42,14 @@ contract SnapshotTokenBase is Snapshot {
     /// @param _parentToken Address of the parent token, set to 0x0 if it is a
     ///  new token
     function SnapshotTokenBase(
-        SnapshotTokenBase _parentToken
+        ISnapshotTokenParent _parentToken,
+        uint256 _parentSnapshot
     )
         public
-        Snapshot(_parentToken.createSnapshot())
+        Snapshot(_parentSnapshot)
     {
         parentToken = _parentToken;
-        parentSnapshot = _parentToken.createSnapshot();
+        parentSnapshot = _parentSnapshot;
     }
 
 ///////////////////
@@ -76,7 +84,7 @@ contract SnapshotTokenBase is Snapshot {
         public
         returns (bool success)
     {
-        return transfer(msg.sender, _to, _amount);
+        return snapshotBaseTransfer(msg.sender, _to, _amount);
     }
 
 ////////////////
@@ -98,9 +106,9 @@ contract SnapshotTokenBase is Snapshot {
             return getValueAt(values, _snapshot, 0);
         }
 
-        // Try parent contract at the fork
+        // Try parent contract at or before the fork
         if (address(parentToken) != 0) {
-            return parentToken.totalSupplyAt(parentSnapshot);
+            return parentToken.totalSupplyAt(min(_snapshot, parentSnapshot));
         }
 
         // Default to an empty balance
@@ -123,11 +131,9 @@ contract SnapshotTokenBase is Snapshot {
             return getValueAt(values, _snapshot, 0);
         }
 
-        // Try parent contract at the fork
+        // Try parent contract at or before the fork
         if (address(parentToken) != 0) {
-            // TODO: Make snapshot numbers continue over the fork,
-            // be sure to use `min(_snapshot, parentSnapshot)`
-            return parentToken.balanceOfAt(_owner, parentSnapshot);
+            return parentToken.balanceOfAt(_owner, min(_snapshot, parentSnapshot));
         }
 
         // Default to an empty balance
@@ -144,17 +150,13 @@ contract SnapshotTokenBase is Snapshot {
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
-    function transfer(address _from, address _to, uint _amount)
+    function snapshotBaseTransfer(address _from, address _to, uint _amount)
         internal
         returns(bool)
     {
         if (_amount == 0) {
             return true;
         }
-
-        // Do not allow transfer to 0x0 or the token contract itself
-        require(_to != 0);
-        require(_to != address(this));
 
         // If the amount being transfered is more than the balance of the
         //  account the transfer returns false
@@ -184,7 +186,7 @@ contract SnapshotTokenBase is Snapshot {
     /// @param _owner The address that will be assigned the new tokens
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
-    function generateTokens(address _owner, uint _amount)
+    function snapshotBaseGenerateTokens(address _owner, uint _amount)
         internal
         returns (bool)
     {
@@ -207,7 +209,7 @@ contract SnapshotTokenBase is Snapshot {
     /// @param _owner The address that will lose the tokens
     /// @param _amount The quantity of tokens to burn
     /// @return True if the tokens are burned correctly
-    function destroyTokens(address _owner, uint _amount)
+    function snapshotBaseDestroyTokens(address _owner, uint _amount)
         internal
         returns (bool)
     {
