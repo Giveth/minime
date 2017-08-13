@@ -1,6 +1,7 @@
 pragma solidity ^0.4.13;
 
-import './ApproveAndCallFallback.sol';
+import './IApproveAndCallFallback.sol';
+import './IERC20Token.sol';
 
 contract AllowanceBase {
 
@@ -79,10 +80,10 @@ contract AllowanceBase {
     ) returns (bool success) {
         require(approve(_spender, _amount));
 
-        ApproveAndCallFallBack(_spender).receiveApproval(
+        IApproveAndCallFallback(_spender).receiveApproval(
             msg.sender,
             _amount,
-            this,
+            IERC20Token(this),
             _extraData
         );
 

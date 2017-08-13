@@ -3,7 +3,7 @@ pragma solidity ^0.4.13;
 import './Controlled.sol';
 import './ITokenController.sol';
 import './IERC20Token.sol';
-import './ApproveAndCallFallback.sol';
+import './IApproveAndCallFallback.sol';
 import './MiniMeTokenFactory.sol';
 import './SnapshotTokenBase.sol';
 import './Snapshot/DailyAndSnapshotable.sol';
@@ -172,7 +172,7 @@ contract MiniMeToken is
     {
         require(approve(_spender, _amount));
 
-        ApproveAndCallFallBack(_spender).receiveApproval(
+        IApproveAndCallFallback(_spender).receiveApproval(
             msg.sender,
             _amount,
             this,
