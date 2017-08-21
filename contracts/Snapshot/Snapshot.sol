@@ -82,7 +82,7 @@ contract Snapshot is MixinSnapshotId {
         constant
         returns (uint)
     {
-        require(_snapshot < mixinNextSnapshotId()));
+        require(_snapshot < mixinNextSnapshotId());
 
         // Empty value
         if (values.length == 0) {

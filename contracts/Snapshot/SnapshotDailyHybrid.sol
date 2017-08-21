@@ -8,6 +8,9 @@ contract SnapshotDailyHybrid is
     ISnapshotable
 {
 
+    // Floor[2**128 / 1 days]
+    uint256 MAX_TIMESTAMP = 3938453320844195178974243141571391;
+
     uint256 nextSnapshotId;
     bool nextSnapshotModified;
 
@@ -22,7 +25,7 @@ contract SnapshotDailyHybrid is
         constant
         returns (uint256)
     {
-        require(timestamp < 2**128 / 1 days);
+        require(timestamp < MAX_TIMESTAMP);
 
         uint256 dayBase = 2**128 * (timestamp / 1 days);
         return dayBase;
