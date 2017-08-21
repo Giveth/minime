@@ -1,8 +1,8 @@
 pragma solidity ^0.4.13;
 
-import './MixinSnapshotId.sol';
+import './MixinSnapshotPolicy.sol';
 
-contract SnapshotBlocks is MixinSnapshotId {
+contract SnapshotBlocks is MixinSnapshotPolicy {
 
     function mixinNextSnapshotId()
         internal

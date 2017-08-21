@@ -1,8 +1,8 @@
 pragma solidity ^0.4.13;
 
-import './MixinSnapshotId.sol';
+import './MixinSnapshotPolicy.sol';
 
-contract SnapshotDaily is MixinSnapshotId {
+contract SnapshotDaily is MixinSnapshotPolicy {
 
     function snapshotAt(uint256 timestamp)
         public

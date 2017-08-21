@@ -1,10 +1,6 @@
 pragma solidity ^0.4.13;
 
-contract MixinSnapshotId {
-
-////////////////
-// Internal abstract functions
-////////////////
+contract ISnapshotPolicy {
 
     // The snapshot Ids need to be monotonically increasing.
     // Whenever the snaspshot id changes, a new snapshot will
@@ -13,10 +9,11 @@ contract MixinSnapshotId {
     //
     // Values passed to `hasValueAt` and `valuteAt` are required
     // to be strictly less than `mixinNextSnapshotId()`.
-    function mixinNextSnapshotId()
-        internal
+    function nextSnapshotId()
+        public
         returns (uint256);
 
-    function mixinFlagSnapshotModified()
+    function flagSnapshotModified()
+        public
         internal;
 }

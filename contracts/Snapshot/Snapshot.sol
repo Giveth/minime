@@ -1,9 +1,9 @@
 pragma solidity ^0.4.13;
 
-import './MixinSnapshotId.sol';
+import './MixinSnapshotPolicy.sol';
 
-// Snapshot consumes MixinSnapshotId
-contract Snapshot is MixinSnapshotId {
+// Snapshot consumes MixinSnapshotPolicy
+contract Snapshot is MixinSnapshotPolicy {
 
 ////////////////
 // Types

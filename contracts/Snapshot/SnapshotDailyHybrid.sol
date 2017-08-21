@@ -1,10 +1,10 @@
 pragma solidity ^0.4.13;
 
-import './MixinSnapshotId.sol';
+import './MixinSnapshotPolicy.sol';
 import './ISnapshotable.sol';
 
 contract SnapshotDailyHybrid is
-    MixinSnapshotId,
+    MixinSnapshotPolicy,
     ISnapshotable
 {
 
