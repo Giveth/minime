@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-// is ISnapshot, IBasicToken, ISnapshotTokenParent
+// is ISnapshotable, IBasicToken, ISnapshotTokenParent
 interface ISnapshotToken {
 
 ////////////////
