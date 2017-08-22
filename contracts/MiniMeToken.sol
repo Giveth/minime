@@ -6,7 +6,7 @@ import './IERC20Token.sol';
 import './ApproveAndCallFallback.sol';
 import './MiniMeTokenFactory.sol';
 import './SnapshotTokenBase.sol';
-import './Snapshot/SnapshotDailyHybrid.sol';
+import './Snapshot/DailyAndSnapshotable.sol';
 import './AllowanceBase.sol';
 import './Helpers.sol';
 import './ControllerClaims.sol';
@@ -46,7 +46,7 @@ contract MiniMeToken is
     IERC20Token,
     ISnapshotToken,
     SnapshotTokenBase,
-    SnapshotDailyHybrid,
+    DailyAndSnapshotable,
     AllowanceBase,
     Controlled,
     ControllerClaims
