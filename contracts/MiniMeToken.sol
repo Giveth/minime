@@ -1,15 +1,16 @@
 pragma solidity ^0.4.13;
 
 import './Controlled.sol';
-import './ITokenController.sol';
-import './IERC20Token.sol';
-import './IApproveAndCallFallback.sol';
-import './MiniMeTokenFactory.sol';
-import './SnapshotTokenBase.sol';
-import './Snapshot/DailyAndSnapshotable.sol';
-import './AllowanceBase.sol';
-import './Helpers.sol';
 import './ControllerClaims.sol';
+import './Helpers/Allowance.sol';
+import './Helpers/Helpers.sol';
+import './Helpers/SnapshotToken.sol';
+import './Helpers/TokenInfo.sol';
+import './ITokenController.sol';
+import './MiniMeTokenFactory.sol';
+import './Snapshot/DailyAndSnapshotable.sol';
+import './Standards/IApproveAndCallFallback.sol';
+import './Standards/IERC20Token.sol';
 
 /*
     Copyright 2016, Jordi Baylina
@@ -41,21 +42,21 @@ import './ControllerClaims.sol';
 ///  that deploys the contract, so usually this token will be deployed by a
 ///  token controller contract, which Giveth will call a "Campaign"
 
-// Helpers is inherited through SnapshotTokenBase
+// Helpers is inherited through SnapshotToken
+// Consumes the MMint mixin from SnapshotToken
 contract MiniMeToken is
     IERC20Token,
     ISnapshotToken,
-    SnapshotTokenBase,
+    MMint,
+    SnapshotToken,
     DailyAndSnapshotable,
-    AllowanceBase,
+    Allowance,
+    TokenInfo,
     Controlled,
     ControllerClaims
 {
 
-    string public name;                //The Token's name: e.g. DigixDAO Tokens
-    uint8 public decimals;             //Number of decimals of the smallest unit
-    string public symbol;              //An identifier: e.g. REP
-    string public version = 'MMT_0.1'; //An arbitrary versioning scheme
+    string private constant VERSION = "MMT_2.0";
 
     // Flag that determines if the token is transferable or not.
     bool public transfersEnabled;
@@ -77,32 +78,32 @@ contract MiniMeToken is
     /// @param _tokenFactory The address of the MiniMeTokenFactory contract that
     ///  will create the Clone token contracts, the token factory needs to be
     ///  deployed first
-    /// @param _parentToken Address of the parent token, set to 0x0 if it is a
+    /// @param parentToken Address of the parent token, set to 0x0 if it is a
     ///  new token
-    /// @param _parentSnapshot Block of the parent token that will
+    /// @param parentSnapshot Block of the parent token that will
     ///  determine the initial distribution of the clone token, set to 0 if it
     ///  is a new token
-    /// @param _tokenName Name of the new token
-    /// @param _decimalUnits Number of decimals of the new token
-    /// @param _tokenSymbol Token Symbol for the new token
+    /// @param tokenName Name of the new token
+    /// @param decimalUnits Number of decimals of the new token
+    /// @param tokenSymbol Token Symbol for the new token
     /// @param _transfersEnabled If true, tokens will be able to be transferred
     function MiniMeToken(
         address _tokenFactory,
-        ISnapshotTokenParent _parentToken,
-        uint _parentSnapshot,
-        string _tokenName,
-        uint8 _decimalUnits,
-        string _tokenSymbol,
+        ISnapshotTokenParent parentToken,
+        uint parentSnapshot,
+        string tokenName,
+        uint8 decimalUnits,
+        string tokenSymbol,
         bool _transfersEnabled
     )
-        SnapshotTokenBase(_parentToken, _parentSnapshot)
-        AllowanceBase()
+        SnapshotToken(parentToken, parentSnapshot)
+        DailyAndSnapshotable()
+        Allowance()
+        TokenInfo(tokenName, decimalUnits, tokenSymbol, VERSION)
         Controlled()
+        ControllerClaims()
     {
         tokenFactory = MiniMeTokenFactory(_tokenFactory);
-        name = _tokenName;                                 // Set the name
-        decimals = _decimalUnits;                          // Set the decimals
-        symbol = _tokenSymbol;                             // Set the symbol
         transfersEnabled = _transfersEnabled;
     }
 
@@ -155,7 +156,7 @@ contract MiniMeToken is
             require(controller.onApprove(msg.sender, _spender, _amount));
         }
 
-        return AllowanceBase.approve(_spender, _amount);
+        return Allowance.approve(_spender, _amount);
     }
 
     /// @notice `msg.sender` approves `_spender` to send `_amount` tokens on
@@ -250,7 +251,7 @@ contract MiniMeToken is
         onlyController
         returns (bool)
     {
-        return snapshotBaseGenerateTokens(_owner, _amount);
+        return SnapshotToken.mGenerateTokens(_owner, _amount);
     }
 
     /// @notice Burns `_amount` tokens from `_owner`
@@ -262,7 +263,7 @@ contract MiniMeToken is
         onlyController
         returns (bool)
     {
-        return snapshotBaseDestroyTokens(_owner, _amount);
+        return SnapshotToken.mDestroyTokens(_owner, _amount);
     }
 
 ////////////////
@@ -276,7 +277,7 @@ contract MiniMeToken is
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
     /// Implements the abstract function from AllowanceBase
-    function allowanceBaseTransfer(address _from, address _to, uint _amount)
+    function mAllowanceTransfer(address _from, address _to, uint _amount)
         internal
         returns(bool)
     {

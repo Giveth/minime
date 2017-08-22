@@ -1,8 +1,7 @@
 pragma solidity ^0.4.13;
 
 import './Controlled.sol';
-import './IBasicToken.sol';
-import './IOwned.sol';
+import './Standards/IBasicToken.sol';
 
 contract ControllerClaims is Controlled {
 
@@ -35,13 +34,5 @@ contract ControllerClaims is Controlled {
         uint balance = _token.balanceOf(this);
         _token.transfer(controller, balance);
         ClaimedTokens(_token, controller, balance);
-    }
-
-    function claimOwnership(IOwned _owned)
-        public
-        onlyController
-    {
-        _owned.changeOwner(controller);
-        ClaimedOwnership(_owned, controller);
     }
 }

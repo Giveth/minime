@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import './ISnapshotTokenParent.sol';
+import './Standards/ISnapshotTokenParent.sol';
 import './ITokenController.sol';
 import './MiniMeToken.sol';
 
