@@ -4,14 +4,12 @@ import '../Snapshot/Snapshot.sol';
 import '../Standards/ISnapshotToken.sol';
 import '../Standards/ISnapshotTokenParent.sol';
 import './MMint.sol';
-import './Helpers.sol';
 
 contract SnapshotToken is
     ISnapshotToken,
     ISnapshotTokenParent,
     MMint,
-    Snapshot,
-    Helpers
+    Snapshot
 {
 
     // `parentToken` is the Token address that was cloned to produce this token;
@@ -110,7 +108,7 @@ contract SnapshotToken is
 
         // Try parent contract at or before the fork
         if (address(parentToken) != 0) {
-            return parentToken.totalSupplyAt(min(_snapshot, parentSnapshot));
+            return parentToken.totalSupplyAt(parentSnapshot);
         }
 
         // Default to an empty balance
@@ -135,7 +133,7 @@ contract SnapshotToken is
 
         // Try parent contract at or before the fork
         if (address(parentToken) != 0) {
-            return parentToken.balanceOfAt(_owner, min(_snapshot, parentSnapshot));
+            return parentToken.balanceOfAt(_owner, parentSnapshot);
         }
 
         // Default to an empty balance
