@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-import './Snapshot.sol';
+import './Snapshot/Snapshot.sol';
 import './ISnapshotToken.sol';
 import './ISnapshotTokenParent.sol';
 import './Helpers.sol';
@@ -46,7 +46,7 @@ contract SnapshotTokenBase is
         uint256 _parentSnapshot
     )
         public
-        Snapshot(_parentSnapshot)
+        Snapshot()
     {
         parentToken = _parentToken;
         parentSnapshot = _parentSnapshot;
@@ -150,7 +150,11 @@ contract SnapshotTokenBase is
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
-    function snapshotBaseTransfer(address _from, address _to, uint _amount)
+    function snapshotBaseTransfer(
+        address _from,
+        address _to,
+        uint _amount
+    )
         internal
         returns(bool)
     {
