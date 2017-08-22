@@ -252,6 +252,6 @@ contract SnapshotToken is
         require(_to != 0);
         require(_to != address(this));
 
-        return snapshotBaseTransfer(_from, _to, _amount);
+        return mTransfer(_from, _to, _amount);
     }
 }

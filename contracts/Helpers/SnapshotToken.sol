@@ -86,7 +86,7 @@ contract SnapshotToken is
         public
         returns (bool success)
     {
-        return snapshotBaseTransfer(msg.sender, _to, _amount);
+        return mTransfer(msg.sender, _to, _amount);
     }
 
 ////////////////
@@ -152,7 +152,7 @@ contract SnapshotToken is
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
-    function snapshotBaseTransfer(
+    function mTransfer(
         address _from,
         address _to,
         uint _amount
