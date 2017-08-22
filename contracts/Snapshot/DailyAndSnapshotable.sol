@@ -14,7 +14,7 @@ contract DailyAndSnapshotable is
     uint256 nextSnapshotId;
     bool nextSnapshotModified;
 
-    function SnapshotDailyHybrid() {
+    function DailyAndSnapshotable() {
         uint256 dayBase = 2**128 * (block.timestamp / 1 days);
         nextSnapshotId = dayBase + 1;
         nextSnapshotModified = false;
