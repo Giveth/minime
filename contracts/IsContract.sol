@@ -1,16 +1,8 @@
 pragma solidity ^0.4.13;
 
-contract Helpers {
+contract IsContract {
 
-    function Helpers() internal {}
-
-    function min(uint256 a, uint256 b)
-        internal
-        constant
-        returns (uint256)
-    {
-        return a < b ? a : b;
-    }
+    function IsContract() internal {}
 
     /// @dev Internal function to determine if an address is a contract
     /// @param _addr The address being queried
@@ -29,5 +21,4 @@ contract Helpers {
         }
         return size > 0;
     }
-
 }

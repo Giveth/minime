@@ -3,16 +3,16 @@ pragma solidity ^0.4.13;
 import './Controlled.sol';
 import './ControllerClaims.sol';
 import './Helpers/Allowance.sol';
-import './Helpers/Helpers.sol';
 import './Helpers/MMint.sol';
-import { SnapshotToken as SnapshotTokenBase } from './Helpers/SnapshotToken.sol';
 import './Helpers/TokenInfo.sol';
+import './IsContract.sol';
 import './ITokenController.sol';
 import './Snapshot/DailyAndSnapshotable.sol';
 import './Standards/IApproveAndCallFallback.sol';
+import './Standards/IERC20Token.sol';
 import './Standards/ISnapshotToken.sol';
 import './Standards/ISnapshotTokenParent.sol';
-import './Standards/IERC20Token.sol';
+import { SnapshotToken as SnapshotTokenBase } from './Helpers/SnapshotToken.sol';
 
 /*
     Copyright 2016, Remco Bloemen, Jordi Baylina
@@ -44,7 +44,6 @@ import './Standards/IERC20Token.sol';
 ///  that deploys the contract, so usually this token will be deployed by a
 ///  token controller contract, which Giveth will call a "Campaign"
 
-// Helpers is inherited through SnapshotToken
 // Consumes the MMint mixin from SnapshotToken
 contract SnapshotToken is
     IERC20Token,
@@ -55,7 +54,8 @@ contract SnapshotToken is
     Allowance,
     TokenInfo,
     Controlled,
-    ControllerClaims
+    ControllerClaims,
+    IsContract
 {
 
     string private constant VERSION = "ST_1.0";
