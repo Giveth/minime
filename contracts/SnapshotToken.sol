@@ -4,15 +4,18 @@ import './Controlled.sol';
 import './ControllerClaims.sol';
 import './Helpers/Allowance.sol';
 import './Helpers/Helpers.sol';
-import './Helpers/SnapshotToken.sol';
+import './Helpers/MMint.sol';
+import { SnapshotToken as SnapshotTokenBase } from './Helpers/SnapshotToken.sol';
 import './Helpers/TokenInfo.sol';
 import './ITokenController.sol';
 import './Snapshot/DailyAndSnapshotable.sol';
 import './Standards/IApproveAndCallFallback.sol';
+import './Standards/ISnapshotToken.sol';
+import './Standards/ISnapshotTokenParent.sol';
 import './Standards/IERC20Token.sol';
 
 /*
-    Copyright 2016, Jordi Baylina
+    Copyright 2016, Remco Bloemen, Jordi Baylina
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,8 +31,8 @@ import './Standards/IERC20Token.sol';
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/// @title MiniMeToken Contract
-/// @author Jordi Baylina
+/// @title SnapshotToken Contract
+/// @author Remco Bloemen, Jordi Baylina
 /// @dev This token contract's goal is to make it easy for anyone to clone this
 ///  token using the token distribution at a given block, this will allow DAO's
 ///  and DApps to upgrade their features in a decentralized manner without
@@ -43,11 +46,11 @@ import './Standards/IERC20Token.sol';
 
 // Helpers is inherited through SnapshotToken
 // Consumes the MMint mixin from SnapshotToken
-contract MiniMeToken is
+contract SnapshotToken is
     IERC20Token,
     ISnapshotToken,
     MMint,
-    SnapshotToken,
+    SnapshotTokenBase,
     DailyAndSnapshotable,
     Allowance,
     TokenInfo,
@@ -55,7 +58,7 @@ contract MiniMeToken is
     ControllerClaims
 {
 
-    string private constant VERSION = "MMT_2.0";
+    string private constant VERSION = "ST_1.0";
 
     // Flag that determines if the token is transferable or not.
     bool public transfersEnabled;
@@ -65,9 +68,6 @@ contract MiniMeToken is
 ////////////////
 
     /// @notice Constructor to create a MiniMeToken
-    /// @param _tokenFactory The address of the MiniMeTokenFactory contract that
-    ///  will create the Clone token contracts, the token factory needs to be
-    ///  deployed first
     /// @param parentToken Address of the parent token, set to 0x0 if it is a
     ///  new token
     /// @param parentSnapshot Block of the parent token that will
@@ -77,7 +77,7 @@ contract MiniMeToken is
     /// @param decimalUnits Number of decimals of the new token
     /// @param tokenSymbol Token Symbol for the new token
     /// @param _transfersEnabled If true, tokens will be able to be transferred
-    function MiniMeToken(
+    function SnapshotToken(
         ISnapshotTokenParent parentToken,
         uint parentSnapshot,
         string tokenName,
@@ -85,7 +85,7 @@ contract MiniMeToken is
         string tokenSymbol,
         bool _transfersEnabled
     )
-        SnapshotToken(parentToken, parentSnapshot)
+        SnapshotTokenBase(parentToken, parentSnapshot)
         DailyAndSnapshotable()
         Allowance()
         TokenInfo(tokenName, decimalUnits, tokenSymbol, VERSION)
@@ -197,7 +197,7 @@ contract MiniMeToken is
         onlyController
         returns (bool)
     {
-        return SnapshotToken.mGenerateTokens(_owner, _amount);
+        return SnapshotTokenBase.mGenerateTokens(_owner, _amount);
     }
 
     /// @notice Burns `_amount` tokens from `_owner`
@@ -209,7 +209,7 @@ contract MiniMeToken is
         onlyController
         returns (bool)
     {
-        return SnapshotToken.mDestroyTokens(_owner, _amount);
+        return SnapshotTokenBase.mDestroyTokens(_owner, _amount);
     }
 
 ////////////////
