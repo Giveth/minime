@@ -225,8 +225,10 @@ contract SnapshotToken is
         uint previousBalanceFrom = balanceOf(_owner);
         require(previousBalanceFrom >= _amount);
 
-        setValue(totalSupplyValues, curTotalSupply - _amount);
-        setValue(balances[_owner], previousBalanceFrom - _amount);
+        uint newTotalSupply = curTotalSupply - _amount;
+        uint newBalanceFrom = previousBalanceFrom - _amount;
+        setValue(totalSupplyValues, newTotalSupply);
+        setValue(balances[_owner], newBalanceFrom);
 
         Transfer(_owner, 0, _amount);
         return true;
