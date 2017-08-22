@@ -5,27 +5,40 @@ import './ISnapshotPolicy.sol';
 
 contract SnapshotExternal is MixinSnapshotPolicy {
 
-    ISnapshotPolicy public externalSnapshotPolicy;
+    ISnapshotPolicy public snapshotPolicy;
 
-    function SnapshotExternal(ISnapshotPolicy externalPolicy) {
-        externalSnapshotPolicy = externalPolicy;
+    event SnapshotPolicyChanged(
+        ISnapshotPolicy oldPolicy,
+        ISnapshotPolicy newPolicy
+    );
+
+    function SnapshotExternal(ISnapshotPolicy initialPolicy) {
+        snapshotPolicy = initialPolicy;
     }
 
-    function setExternalSnapshotId()
+    function setSnapshotPolicy(ISnapshotPolicy newPolicy)
          public
     {
+        if (snapshotPolicy == newPolicy) {
+            return;
+        }
+
+        ISnapshotPolicy oldPolicy = snapshotPolicy;
+        snapshotPolicy = newPolicy;
+
+        SnapshotPolicyChanged(oldPolicy, newPolicy);
     }
 
     function mixinNextSnapshotId()
         internal
         returns (uint256)
     {
-        return externalSnapshotPolicy.nextSnapshotId();
+        return snapshotPolicy.nextSnapshotId();
     }
 
     function mixinFlagSnapshotModified()
         internal
     {
-        return externalSnapshotPolicy.flagSnapshotModified();
+        return snapshotPolicy.flagSnapshotModified();
     }
 }
