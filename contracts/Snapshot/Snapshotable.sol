@@ -28,7 +28,12 @@ contract Snapshotable is
         // the previous snapshot id. Their states
         // are identical.
         if (!nextSnapshotModified) {
-            return nextSnapshotId - 1;
+            uint256 previousSnapshot = nextSnapshotId - 1;
+
+            // Log the event anyway, some logic may depend
+            // depend on it.
+            SnapshotCreated(previousSnapshot);
+            return previousSnapshot;
         }
 
         // Increment the snapshot counter

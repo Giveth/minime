@@ -4,14 +4,12 @@ import '../Snapshot/Snapshot.sol';
 import '../Standards/ISnapshotToken.sol';
 import '../Standards/ISnapshotTokenParent.sol';
 import './MMint.sol';
-import './Helpers.sol';
 
 contract SnapshotToken is
     ISnapshotToken,
     ISnapshotTokenParent,
     MMint,
-    Snapshot,
-    Helpers
+    Snapshot
 {
 
     // `parentToken` is the Token address that was cloned to produce this token;
@@ -86,7 +84,7 @@ contract SnapshotToken is
         public
         returns (bool success)
     {
-        return snapshotBaseTransfer(msg.sender, _to, _amount);
+        return mTransfer(msg.sender, _to, _amount);
     }
 
 ////////////////
@@ -110,7 +108,7 @@ contract SnapshotToken is
 
         // Try parent contract at or before the fork
         if (address(parentToken) != 0) {
-            return parentToken.totalSupplyAt(min(_snapshot, parentSnapshot));
+            return parentToken.totalSupplyAt(parentSnapshot);
         }
 
         // Default to an empty balance
@@ -135,7 +133,7 @@ contract SnapshotToken is
 
         // Try parent contract at or before the fork
         if (address(parentToken) != 0) {
-            return parentToken.balanceOfAt(_owner, min(_snapshot, parentSnapshot));
+            return parentToken.balanceOfAt(_owner, parentSnapshot);
         }
 
         // Default to an empty balance
@@ -152,7 +150,7 @@ contract SnapshotToken is
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
-    function snapshotBaseTransfer(
+    function mTransfer(
         address _from,
         address _to,
         uint _amount
@@ -225,8 +223,10 @@ contract SnapshotToken is
         uint previousBalanceFrom = balanceOf(_owner);
         require(previousBalanceFrom >= _amount);
 
-        setValue(totalSupplyValues, curTotalSupply - _amount);
-        setValue(balances[_owner], previousBalanceFrom - _amount);
+        uint newTotalSupply = curTotalSupply - _amount;
+        uint newBalanceFrom = previousBalanceFrom - _amount;
+        setValue(totalSupplyValues, newTotalSupply);
+        setValue(balances[_owner], newBalanceFrom);
 
         Transfer(_owner, 0, _amount);
         return true;

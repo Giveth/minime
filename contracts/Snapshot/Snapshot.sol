@@ -22,12 +22,6 @@ contract Snapshot is MPolicy {
     }
 
 ////////////////
-// Events
-////////////////
-
-    event SnapshotCreated(uint256 snapshot);
-
-////////////////
 // Internal functions
 ////////////////
 
@@ -148,7 +142,7 @@ contract Snapshot is MPolicy {
         if (frozen) {
 
             // Do nothing if the value was not modified
-            bool unmodified = values[last].value != _value;
+            bool unmodified = values[last].value == _value;
             if (unmodified) {
                 return;
             }
