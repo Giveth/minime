@@ -1,9 +1,12 @@
 pragma solidity ^0.4.13;
 
-import './MixinSnapshotId.sol';
+import './MPolicy.sol';
 import './ISnapshotable.sol';
 
-contract SnapshotOndemand is MixinSnapshotId, ISnapshotable {
+contract Snapshotable is
+    MPolicy,
+    ISnapshotable
+{
 
     uint256 nextSnapshotId;
     bool nextSnapshotModified;

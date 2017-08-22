@@ -1,9 +1,9 @@
 pragma solidity ^0.4.13;
 
-import './MixinSnapshotId.sol';
+import './MPolicy.sol';
 
-// Snapshot consumes MixinSnapshotId
-contract Snapshot is MixinSnapshotId {
+// Snapshot consumes MPolicy
+contract Snapshot is MPolicy {
 
 ////////////////
 // Types
@@ -49,7 +49,7 @@ contract Snapshot is MixinSnapshotId {
         constant
         returns (bool)
     {
-        require(_snapshot < mixinNextSnapshotId());
+        require(_snapshot < mNextSnapshotId());
         return values.length > 0 && values[0].snapshot <= _snapshot;
     }
 
@@ -82,7 +82,7 @@ contract Snapshot is MixinSnapshotId {
         constant
         returns (uint)
     {
-        require(_snapshot < mixinNextSnapshotId());
+        require(_snapshot < mNextSnapshotId());
 
         // Empty value
         if (values.length == 0) {
@@ -126,7 +126,7 @@ contract Snapshot is MixinSnapshotId {
     {
         // TODO: simplify or break into smaller functions
 
-        uint256 nextSnapshot = mixinNextSnapshotId();
+        uint256 nextSnapshot = mNextSnapshotId();
 
         // Always create a new entry if there currently is no value
         bool empty = values.length == 0;
@@ -139,7 +139,7 @@ contract Snapshot is MixinSnapshotId {
             }));
 
             // Flag next snapshot as modified
-            mixinFlagSnapshotModified();
+            mFlagSnapshotModified();
             return;
         }
 
@@ -160,7 +160,7 @@ contract Snapshot is MixinSnapshotId {
             }));
 
             // Flag next snapshot as modified
-            mixinFlagSnapshotModified();
+            mFlagSnapshotModified();
 
         } else { // We are updating the nextSnapshot
 

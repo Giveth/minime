@@ -1,8 +1,8 @@
 pragma solidity ^0.4.13;
 
-import './MixinSnapshotId.sol';
+import './MPolicy.sol';
 
-contract SnapshotDaily is MixinSnapshotId {
+contract Daily is MPolicy {
 
     function snapshotAt(uint256 timestamp)
         public
@@ -15,7 +15,7 @@ contract SnapshotDaily is MixinSnapshotId {
         return timestamp;
     }
 
-    function mixinNextSnapshotId()
+    function mNextSnapshotId()
         internal
         returns (uint256)
     {
@@ -28,7 +28,7 @@ contract SnapshotDaily is MixinSnapshotId {
         return timestamp;
     }
 
-    function mixinFlagSnapshotModified()
+    function mFlagSnapshotModified()
         internal
     {
     }

@@ -1,10 +1,10 @@
 pragma solidity ^0.4.13;
 
-import './MixinSnapshotId.sol';
+import './MPolicy.sol';
 import './ISnapshotable.sol';
 
-contract SnapshotDailyHybrid is
-    MixinSnapshotId,
+contract DailyAndSnapshotable is
+    MPolicy,
     ISnapshotable
 {
 
@@ -61,7 +61,7 @@ contract SnapshotDailyHybrid is
         return snapshotId;
     }
 
-    function mixinNextSnapshotId()
+    function mNextSnapshotId()
         internal
         returns (uint256)
     {
@@ -80,7 +80,7 @@ contract SnapshotDailyHybrid is
         return nextSnapshotId;
     }
 
-    function mixinFlagSnapshotModified()
+    function mFlagSnapshotModified()
         internal
     {
         if (!nextSnapshotModified) {

@@ -1,6 +1,7 @@
 pragma solidity ^0.4.13;
 
-contract MixinSnapshotId {
+// Mixin for the snapshot policy
+contract MPolicy {
 
 ////////////////
 // Internal abstract functions
@@ -13,10 +14,10 @@ contract MixinSnapshotId {
     //
     // Values passed to `hasValueAt` and `valuteAt` are required
     // to be strictly less than `mixinNextSnapshotId()`.
-    function mixinNextSnapshotId()
+    function mNextSnapshotId()
         internal
         returns (uint256);
 
-    function mixinFlagSnapshotModified()
+    function mFlagSnapshotModified()
         internal;
 }
