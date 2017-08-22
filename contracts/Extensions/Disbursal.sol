@@ -1,9 +1,9 @@
 pragma solidity ^0.4.13;
 
-import './ISnapshotToken.sol';
-import './IBasicToken.sol';
-import './IERC20Token.sol';
-import './IApproveAndCallFallback.sol';
+import '../Standards/ISnapshotToken.sol';
+import '../Standards/IBasicToken.sol';
+import '../Standards/IERC20Token.sol';
+import '../Standards/IApproveAndCallFallback.sol';
 
 // TODO: Anyone can create a token and disburse it, but then everyone
 //       needs to pay extra gas for claim(). It is not possible to skip
@@ -69,33 +69,20 @@ contract Disbursal is IApproveAndCallFallback {
 // Public functions
 ////////////////
 
-    function claimable()
+    function claimables(address beneficiary, uint256 from)
         public
         constant
-        returns (uint256[])
+        returns (uint256[100])
     {
-        return claimable(msg.sender);
-    }
-
-    function claimable(address beneficiary)
-        public
-        constant
-        returns (uint256[])
-    {
-        return claimable(beneficiary, 0, disbursments.length);
-    }
-
-    function claimable(address beneficiary, uint256 from, uint256 to)
-        public
-        constant
-        returns (uint256[])
-    {
-        require(from <= to);
-        require(to < disbursments.length);
-        uint256[] storage result;
-        for(uint256 i = from; i < to; ++i) {
-            if(claimable(beneficiary, i)) {
-                result.push(i);
+        uint256[100] memory result;
+        uint j = 0;
+        for (uint256 i = from; i < disbursments.length; ++i) {
+            if (claimable(beneficiary, i)) {
+                result[j] = i;
+                j += 1;
+                if (j == 100) {
+                    break;
+                }
             }
         }
         return  result;
@@ -185,7 +172,7 @@ contract Disbursal is IApproveAndCallFallback {
         public
     {
         uint256 amount = token.allowance(msg.sender, this);
-        disburseAllowance(token, msg.sender);
+        disburseAllowance(token, msg.sender, amount);
     }
 
     function disburseAllowance(IERC20Token token, address from, uint256 amount)
@@ -205,7 +192,7 @@ contract Disbursal is IApproveAndCallFallback {
         public
     {
         require(data.length == 0);
-        disburseAllowance(token, from, amount)
+        disburseAllowance(token, from, amount);
     }
 
     // TODO: ERC223 style receiver
@@ -247,22 +234,18 @@ contract Disbursal is IApproveAndCallFallback {
         Disbursed(index, token, amount, snapshot, totalShares);
     }
 
-    function mulDiv(uint256 a, uint256 n, uint256 d)
+    function mulDiv(
+        uint256 value,
+        uint256 numerator,
+        uint256 denominator
+    )
         internal
         constant
         returns (uint256)
     {
-        require(a < 2**128);
-        require(d < 2**128);
-        require(n <= d);
-
-        uint256 s = a * n;
-
-        // Correct rounding
-        s += n / 2;
-
-        uint256 f = s / d;
-
-        return f;
+        require(value < 2**128);
+        require(numerator < 2**128);
+        require(numerator <= denominator);
+        return (value * numerator) / denominator;
     }
 }
