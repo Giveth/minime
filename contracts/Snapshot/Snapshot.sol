@@ -22,12 +22,6 @@ contract Snapshot is MPolicy {
     }
 
 ////////////////
-// Events
-////////////////
-
-    event SnapshotCreated(uint256 snapshot);
-
-////////////////
 // Internal functions
 ////////////////
 
