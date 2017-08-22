@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
+import '../Standards/ISnapshotable.sol';
 import './MPolicy.sol';
-import './ISnapshotable.sol';
 
 contract Snapshotable is
     MPolicy,

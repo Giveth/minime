@@ -1,13 +1,15 @@
 pragma solidity ^0.4.13;
 
-import './Snapshot/Snapshot.sol';
-import './ISnapshotToken.sol';
-import './ISnapshotTokenParent.sol';
+import '../Snapshot/Snapshot.sol';
+import '../Standards/ISnapshotToken.sol';
+import '../Standards/ISnapshotTokenParent.sol';
+import './MMint.sol';
 import './Helpers.sol';
 
-contract SnapshotTokenBase is
+contract SnapshotToken is
     ISnapshotToken,
     ISnapshotTokenParent,
+    MMint,
     Snapshot,
     Helpers
 {
@@ -41,7 +43,7 @@ contract SnapshotTokenBase is
     /// @notice Constructor to create a MiniMeToken
     /// @param _parentToken Address of the parent token, set to 0x0 if it is a
     ///  new token
-    function SnapshotTokenBase(
+    function SnapshotToken(
         ISnapshotTokenParent _parentToken,
         uint256 _parentSnapshot
     )
@@ -190,7 +192,7 @@ contract SnapshotTokenBase is
     /// @param _owner The address that will be assigned the new tokens
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
-    function snapshotBaseGenerateTokens(address _owner, uint _amount)
+    function mGenerateTokens(address _owner, uint _amount)
         internal
         returns (bool)
     {
@@ -213,7 +215,7 @@ contract SnapshotTokenBase is
     /// @param _owner The address that will lose the tokens
     /// @param _amount The quantity of tokens to burn
     /// @return True if the tokens are burned correctly
-    function snapshotBaseDestroyTokens(address _owner, uint _amount)
+    function mDestroyTokens(address _owner, uint _amount)
         internal
         returns (bool)
     {

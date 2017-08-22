@@ -1,8 +1,14 @@
 pragma solidity ^0.4.13;
 
-import './ApproveAndCallFallback.sol';
+import '../Standards/IERC20Allowance.sol';
+import '../Standards/IApproveAndCallFallback.sol';
+import './MAllowance.sol';
 
-contract AllowanceBase {
+// Consumes the MAllowance mixin
+contract Allowance is
+    IERC20Allowance,
+    MAllowance
+{
 
 ////////////////
 // State
@@ -25,7 +31,7 @@ contract AllowanceBase {
 // Constructor
 ////////////////
 
-    function AllowanceBase()
+    function Allowance()
         internal
     {
     }
@@ -79,10 +85,10 @@ contract AllowanceBase {
     ) returns (bool success) {
         require(approve(_spender, _amount));
 
-        ApproveAndCallFallBack(_spender).receiveApproval(
+        IApproveAndCallFallback(_spender).receiveApproval(
             msg.sender,
             _amount,
-            this,
+            IERC20Token(this),
             _extraData
         );
 
@@ -105,15 +111,7 @@ contract AllowanceBase {
         }
 
         allowed[_from][msg.sender] -= _amount;
-        return allowanceBaseTransfer(_from, _to, _amount);
+        return mAllowanceTransfer(_from, _to, _amount);
     }
-
-////////////////
-// Abstract functions
-////////////////
-
-    function allowanceBaseTransfer(address from, address to, uint256 amount)
-        internal
-        returns (bool);
 
 }
