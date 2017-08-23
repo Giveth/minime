@@ -2,7 +2,7 @@ pragma solidity ^0.4.13;
 
 
 // is IBasicToken
-interface IERC20Allowance {
+contract IERC20Allowance {
 
     /// @dev This function makes it easy to read the `allowed[]` map
     /// @param _owner The address of the account that owns the token

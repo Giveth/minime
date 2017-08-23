@@ -2,7 +2,7 @@ pragma solidity ^0.4.13;
 
 
 // is IBasicToken, IERC20Allowance
-interface IERC20Token {
+contract IERC20Token {
 
 ////////////////
 // Events

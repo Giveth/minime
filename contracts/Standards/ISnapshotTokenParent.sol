@@ -1,6 +1,6 @@
 pragma solidity ^0.4.13;
 
-interface ISnapshotTokenParent {
+contract ISnapshotTokenParent {
 
     /// @notice Total amount of tokens at a specific `_snapshot`.
     /// @param _snapshot The block number when the totalSupply is queried
