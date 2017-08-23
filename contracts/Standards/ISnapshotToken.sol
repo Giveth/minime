@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
 // is ISnapshotable, IBasicToken, ISnapshotTokenParent
-interface ISnapshotToken {
+contract ISnapshotToken {
 
 ////////////////
 // Events

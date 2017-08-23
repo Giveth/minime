@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
 
 /// @dev The token controller contract must implement these functions
-interface ITokenController {
+contract ITokenController {
 
     // Payable callback function to receive eth
     function () payable;
