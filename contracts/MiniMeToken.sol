@@ -532,7 +532,7 @@ contract MiniMeToken is Controlled {
     ///  sent tokens to this contract.
     /// @param _token The address of the token contract that you want to recover
     ///  set to 0 in case you want to extract ether.
-    function claimTokens(address _token) onlyController {
+    function claimTokens(address _token) public onlyController {
         if (_token == 0x0) {
             controller.transfer(this.balance);
             return;
