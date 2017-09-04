@@ -43,6 +43,12 @@ If transfersEnabled == false, tokens cannot be transferred by the users, however
     // Allows tokens to be transferred if true or frozen if false
     function enableTransfers(bool _transfersEnabled) onlyController
 
+## Contract schema
+
+The contracts provided by this project adopt this relationships indicated in the diagram below.
+
+![UML schema](./doc/schema.png "Contract schema")
+
 
 ## Applications
 

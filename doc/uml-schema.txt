@@ -1,0 +1,16 @@
+// Diagram generated from https://yuml.me/diagram/plain/class/draw
+
+[Owned|+owner: address|Owner(); onlyOwner; changeOwner() onlyOwner]
+
+[TokenController|proxyPayment();onTransfer();onApprove()]
+
+[Controlled|+controller: address|Controlled(); onlyController; changeController() onlyController]
+
+[MiniMeTokenFactory| createCloneToken()]
+
+[MiniMeToken|+name: string; +decimals: uint8; +symbol: string;  +version: string; +parentToken: MiniMeToken; +parentSnapShotBlock: uint; +creationBlock: uint; + transfersEnabled: bool; +tokenFactory: MiniMeTokenFactory; | MiniMeToken(); transfer() : bool; transferFrom() : bool; doTransfer() : bool; balanceOf() : uint256 constant ; approve() : bool;  allowance() : uint256 constant; approveAndCall() : bool ; balanceOfAt() : uint constant; totalSupplyAt() : uint constant ; createCloneToken() : address ; generateTokens() : bool onlyController ; destroyTokens() : bool onlyController ; enableTransfers() onlyController ; claimTokens() : onlyController | ClaimedTokens(_token _controller _amount) ; Transfer(_from _to _amount); NewCloneToken(_cloneToken _snapshotBlock); Approval(_owner _spender _amount)]-^[Controlled]
+
+[MyCampaign|+totalCollected : uint256|MyCampaign(); finalizeFunding(); setVault() : onlyOwner]-^[Owned]
+[MyCampaign]-^[TokenController]
+
+[ApproveAndCallFallBack| receiveApproval()]
