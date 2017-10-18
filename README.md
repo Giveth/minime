@@ -1,4 +1,4 @@
-# MiniMeToken
+![MiniMe Token](readme-header.png)
 
 The MiniMeToken contract is a standard ERC20 token with extra functionality:
 
