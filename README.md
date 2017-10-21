@@ -69,4 +69,3 @@ All these applications and more are enabled by the MiniMe Token Contract. The mo
 4. Assign the controller of the MinimeToken to the campaign.
 
 
-
