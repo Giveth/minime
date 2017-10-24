@@ -23,7 +23,7 @@ pragma solidity ^0.4.18;
 ///  token using the token distribution at a given block, this will allow DAO's
 ///  and DApps to upgrade their features in a decentralized manner without
 ///  affecting the original token
-/// @dev It is ERC20 compliant, but still needs to under go further testing.
+/// @dev It is ERC20 compliant, but still needs to undergo further testing.
 
 import "./Controlled.sol";
 import "./TokenController.sol";
