@@ -28,6 +28,10 @@ pragma solidity ^0.4.18;
 import "./Controlled.sol";
 import "./TokenController.sol";
 
+/// @dev The contract being approved must have `receiveApproval()` for 
+///  `approveAndCall()` to work; adding this contract is needed to encode the
+///  `_data` corectly for execution (in older versions, the pointer was left
+///  out)
 contract ApproveAndCallFallBack {
     function receiveApproval(address from, uint256 _amount, address _token, bytes _data) public;
 }
