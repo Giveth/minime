@@ -6,15 +6,6 @@ const MiniMeToken = require("../js/minimetoken");
 
 const verbose = false;
 
-// b[0]  ->  0, 0, 0, 0
-// b[1]  ->  0,10, 0, 0
-// b[2]  ->  0, 8, 2, 0
-// b[3]  ->  0, 9, 1, 0
-// b[4]  ->  0, 6, 1, 0
-//  Clone token
-// b[5]  ->  0, 6, 1, 0
-// b[6]  ->  0, 2, 5. 0
-
 describe("MiniMeToken test", () => {
     let miniMeToken;
     let miniMeTokenClone;
@@ -47,17 +38,10 @@ describe("MiniMeToken test", () => {
                 });
             },
             (cb) => {
-                miniMeToken.generateTokens({
-                    owner: ethConnector.accounts[ 1 ],
-                    amount: 10,
-                    from: ethConnector.accounts[ 0 ],
-                }, cb);
-            },
-            (cb) => {
                 miniMeToken.getState((err, _st) => {
                     assert.ifError(err);
-                    assert.equal(_st.totalSupply, 10);
-                    assert.equal(_st.balances[ ethConnector.accounts[ 1 ] ], 10);
+                    assert.equal(_st.totalSupply, 10000000);
+                    assert.equal(_st.balances[ ethConnector.accounts[ 1 ] ], 10000000);
                     cb();
                 });
             },
@@ -92,8 +76,8 @@ describe("MiniMeToken test", () => {
             (cb) => {
                 miniMeToken.getState((err, _st) => {
                     assert.ifError(err);
-                    assert.equal(_st.totalSupply, 10);
-                    assert.equal(_st.balances[ ethConnector.accounts[ 1 ] ], 8);
+                    assert.equal(_st.totalSupply, 10000000);
+                    assert.equal(_st.balances[ ethConnector.accounts[ 1 ] ], 999998);
                     assert.equal(_st.balances[ ethConnector.accounts[ 2 ] ], 2);
                     cb();
                 });
@@ -104,7 +88,7 @@ describe("MiniMeToken test", () => {
                     b[ 1 ],
                     (err, _balance) => {
                         assert.ifError(err);
-                        assert.equal(ethConnector.web3.fromWei(_balance).toNumber(), 10);
+                        assert.equal(ethConnector.web3.fromWei(_balance).toNumber(), 100000000);
                         cb();
                     });
             },
@@ -164,8 +148,8 @@ describe("MiniMeToken test", () => {
             (cb) => {
                 miniMeToken.getState((err, _st) => {
                     assert.ifError(err);
-                    assert.equal(_st.totalSupply, 10);
-                    assert.equal(_st.balances[ ethConnector.accounts[ 1 ] ], 9);
+                    assert.equal(_st.totalSupply, 10000000);
+                    assert.equal(_st.balances[ ethConnector.accounts[ 1 ] ], 999999);
                     assert.equal(_st.balances[ ethConnector.accounts[ 2 ] ], 1);
                     cb();
                 });
@@ -174,7 +158,7 @@ describe("MiniMeToken test", () => {
                 miniMeToken.contract.balanceOfAt(ethConnector.accounts[ 1 ], b[ 2 ],
                     (err, _balance) => {
                         assert.ifError(err);
-                        assert.equal(ethConnector.web3.fromWei(_balance), 8);
+                        assert.equal(ethConnector.web3.fromWei(_balance), 999998);
                         cb();
                     });
             },
@@ -190,7 +174,7 @@ describe("MiniMeToken test", () => {
                 miniMeToken.contract.balanceOfAt(ethConnector.accounts[ 1 ], b[ 1 ],
                     (err, _balance) => {
                         assert.ifError(err);
-                        assert.equal(ethConnector.web3.fromWei(_balance), 10);
+                        assert.equal(ethConnector.web3.fromWei(_balance), 10000000);
                         cb();
                     });
             },
@@ -233,33 +217,6 @@ describe("MiniMeToken test", () => {
                         assert.equal(ethConnector.web3.fromWei(_balance), 0);
                         cb();
                     });
-            },
-        ], done);
-    });
-    it("Should Destroy 3 tokens from 1 and 1 from 2", (done) => {
-        async.series([
-            (cb) => {
-                miniMeToken.destroyTokens({
-                    owner: ethConnector.accounts[ 1 ],
-                    amount: 3,
-                    from: ethConnector.accounts[ 0 ],
-                }, cb);
-            },
-            (cb) => {
-                ethConnector.web3.eth.getBlockNumber((err, _blockNumber) => {
-                    assert.ifError(err);
-                    b[ 4 ] = _blockNumber;
-                    log("b[4]->" + b[ 4 ]);
-                    cb();
-                });
-            },
-            (cb) => {
-                miniMeToken.getState((err, _st) => {
-                    assert.ifError(err);
-                    assert.equal(_st.totalSupply, 7);
-                    assert.equal(_st.balances[ ethConnector.accounts[ 1 ] ], 6);
-                    cb();
-                });
             },
         ], done);
     });

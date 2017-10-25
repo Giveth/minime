@@ -36,14 +36,7 @@ function deployExample(cb) {
                 console.log("Minime Token: " + minimeToken.contract.address);
                 cb();
             });
-        },
-        function(cb) {
-            minimeToken.generateTokens({
-                owner: eth.accounts[ 1 ],
-                amount: 10,
-                from: eth.accounts[ 0 ],
-            },cb);
-        },
+        }
     ], cb);
 
 }
