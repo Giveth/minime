@@ -6,15 +6,6 @@ const MiniMeToken = require("../js/minimetoken");
 
 const verbose = false;
 
-// b[0]  ->  0, 0, 0, 0
-// b[1]  ->  0,10, 0, 0
-// b[2]  ->  0, 8, 2, 0
-// b[3]  ->  0, 9, 1, 0
-// b[4]  ->  0, 6, 1, 0
-//  Clone token
-// b[5]  ->  0, 6, 1, 0
-// b[6]  ->  0, 2, 5. 0
-
 describe("MiniMeToken test", () => {
     let miniMeToken;
     let miniMeTokenClone;
