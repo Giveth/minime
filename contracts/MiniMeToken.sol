@@ -356,7 +356,8 @@ contract MiniMeToken is Controlled {
             if (address(parentToken) != 0) {
                 return parentToken.totalSupplyAt(min(_blockNumber, parentSnapShotBlock));
             } else {
-                return 0;
+                // Our token starts with a supply of 10 million
+                return 10000000;
             }
 
         // This will return the expected totalSupply during normal situations
