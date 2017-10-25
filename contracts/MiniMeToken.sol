@@ -77,9 +77,6 @@ contract MiniMeToken is Controlled {
     // Tracks the history of the `totalSupply` of the token
     Checkpoint[] totalSupplyHistory;
 
-    // Flag that determines if the token is transferable or not.
-    bool public transfersEnabled;
-
     // The factory used to create new clone tokens
     MiniMeTokenFactory public tokenFactory;
 
@@ -99,15 +96,13 @@ contract MiniMeToken is Controlled {
     /// @param _tokenName Name of the new token
     /// @param _decimalUnits Number of decimals of the new token
     /// @param _tokenSymbol Token Symbol for the new token
-    /// @param _transfersEnabled If true, tokens will be able to be transferred
     function MiniMeToken(
         address _tokenFactory,
         address _parentToken,
         uint _parentSnapShotBlock,
         string _tokenName,
         uint8 _decimalUnits,
-        string _tokenSymbol,
-        bool _transfersEnabled
+        string _tokenSymbol
     ) public {
         tokenFactory = MiniMeTokenFactory(_tokenFactory);
         name = _tokenName;                                 // Set the name
@@ -115,7 +110,6 @@ contract MiniMeToken is Controlled {
         symbol = _tokenSymbol;                             // Set the symbol
         parentToken = MiniMeToken(_parentToken);
         parentSnapShotBlock = _parentSnapShotBlock;
-        transfersEnabled = _transfersEnabled;
         creationBlock = block.number;
     }
 
@@ -129,7 +123,6 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be transferred
     /// @return Whether the transfer was successful or not
     function transfer(address _to, uint256 _amount) public returns (bool success) {
-        require(transfersEnabled);
         return doTransfer(msg.sender, _to, _amount);
     }
 
@@ -147,8 +140,6 @@ contract MiniMeToken is Controlled {
         //  controller of this contract, which in most situations should be
         //  another open source smart contract or 0x0
         if (msg.sender != controller) {
-            require(transfersEnabled);
-
             // The standard ERC 20 transferFrom functionality
             if (allowed[_from][msg.sender] < _amount) return false;
             allowed[_from][msg.sender] -= _amount;
@@ -215,8 +206,6 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return True if the approval was successful
     function approve(address _spender, uint256 _amount) public returns (bool success) {
-        require(transfersEnabled);
-
         // To change the approve amount you first have to reduce the addresses`
         //  allowance to zero by calling `approve(_spender,0)` if it is not
         //  already 0 to mitigate the race condition described here:
@@ -317,7 +306,8 @@ contract MiniMeToken is Controlled {
             if (address(parentToken) != 0) {
                 return parentToken.totalSupplyAt(min(_blockNumber, parentSnapShotBlock));
             } else {
-                return 0;
+                // Our token starts with a supply of 10 million
+                return 10000000;
             }
 
         // This will return the expected totalSupply during normal situations
@@ -338,14 +328,12 @@ contract MiniMeToken is Controlled {
     /// @param _snapshotBlock Block when the distribution of the parent token is
     ///  copied to set the initial distribution of the new clone token;
     ///  if the block is zero than the actual block, the current block is used
-    /// @param _transfersEnabled True if transfers are allowed in the clone
     /// @return The address of the new MiniMeToken Contract
     function createCloneToken(
         string _cloneTokenName,
         uint8 _cloneDecimalUnits,
         string _cloneTokenSymbol,
         uint _snapshotBlock,
-        bool _transfersEnabled
         ) public returns(address) {
         if (_snapshotBlock == 0) _snapshotBlock = block.number;
         MiniMeToken cloneToken = tokenFactory.createCloneToken(
@@ -353,8 +341,7 @@ contract MiniMeToken is Controlled {
             _snapshotBlock,
             _cloneTokenName,
             _cloneDecimalUnits,
-            _cloneTokenSymbol,
-            _transfersEnabled
+            _cloneTokenSymbol
             );
 
         cloneToken.changeController(msg.sender);
@@ -362,54 +349,6 @@ contract MiniMeToken is Controlled {
         // An event to make the token easy to find on the blockchain
         NewCloneToken(address(cloneToken), _snapshotBlock);
         return address(cloneToken);
-    }
-
-////////////////
-// Generate and destroy tokens
-////////////////
-
-    /// @notice Generates `_amount` tokens that are assigned to `_owner`
-    /// @param _owner The address that will be assigned the new tokens
-    /// @param _amount The quantity of tokens generated
-    /// @return True if the tokens are generated correctly
-    function generateTokens(address _owner, uint _amount
-    ) public onlyController returns (bool) {
-        uint curTotalSupply = totalSupply();
-        require(curTotalSupply + _amount >= curTotalSupply); // Check for overflow
-        uint previousBalanceTo = balanceOf(_owner);
-        require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
-        updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
-        updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
-        Transfer(0, _owner, _amount);
-        return true;
-    }
-
-
-    /// @notice Burns `_amount` tokens from `_owner`
-    /// @param _owner The address that will lose the tokens
-    /// @param _amount The quantity of tokens to burn
-    /// @return True if the tokens are burned correctly
-    function destroyTokens(address _owner, uint _amount
-    ) onlyController public returns (bool) {
-        uint curTotalSupply = totalSupply();
-        require(curTotalSupply >= _amount);
-        uint previousBalanceFrom = balanceOf(_owner);
-        require(previousBalanceFrom >= _amount);
-        updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
-        updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
-        Transfer(_owner, 0, _amount);
-        return true;
-    }
-
-////////////////
-// Enable tokens transfers
-////////////////
-
-
-    /// @notice Enables token holders to transfer their tokens freely if true
-    /// @param _transfersEnabled True if transfers are allowed in the clone
-    function enableTransfers(bool _transfersEnabled) public onlyController {
-        transfersEnabled = _transfersEnabled;
     }
 
 ////////////////
@@ -537,15 +476,13 @@ contract MiniMeTokenFactory {
     /// @param _tokenName Name of the new token
     /// @param _decimalUnits Number of decimals of the new token
     /// @param _tokenSymbol Token Symbol for the new token
-    /// @param _transfersEnabled If true, tokens will be able to be transferred
     /// @return The address of the new token contract
     function createCloneToken(
         address _parentToken,
         uint _snapshotBlock,
         string _tokenName,
         uint8 _decimalUnits,
-        string _tokenSymbol,
-        bool _transfersEnabled
+        string _tokenSymbol
     ) public returns (MiniMeToken) {
         MiniMeToken newToken = new MiniMeToken(
             this,
@@ -553,8 +490,7 @@ contract MiniMeTokenFactory {
             _snapshotBlock,
             _tokenName,
             _decimalUnits,
-            _tokenSymbol,
-            _transfersEnabled
+            _tokenSymbol
             );
 
         newToken.changeController(msg.sender);

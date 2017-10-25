@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Giveth/minime.git"
+    "url": "https://github.com/binary-com/minime.git"
   },
   "keywords": [
     "dao",
@@ -28,9 +28,9 @@
   "author": "Jordi Baylina",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/Giveth/minimi/issues"
+    "url": "https://github.com/binary-com/minimi/issues"
   },
-  "homepage": "https://github.com/Giveth/minime",
+  "homepage": "https://github.com/binary-com/minime",
   "dependencies": {
     "eth-contract-class": "0.0.6"
   },
