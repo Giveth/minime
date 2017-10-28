@@ -1,4 +1,4 @@
-pragma solidity ^0.4.6;
+pragma solidity ^0.4.18;
 
 /*
     Copyright 2017, Jordi Baylina
@@ -24,7 +24,7 @@ pragma solidity ^0.4.6;
 ///  funds for non-profit causes, but it can be customized for any variety of
 ///  purposes.
 
-import "MiniMeToken.sol";
+import "./ERC223bMiniMeToken.sol";
 
 
 /// @dev `Owned` is a base level contract that assigns an `owner` that can be
@@ -37,12 +37,12 @@ contract Owned {
     address public owner;
 
     /// @notice The Constructor assigns the message sender to be `owner`
-    function Owned() { owner = msg.sender;}
+    function Owned() public { owner = msg.sender;}
 
     /// @notice `owner` can step down and assign some other address to this role
     /// @param _newOwner The address of the new owner. 0x0 can be used to create
     ///  an unowned neutral vault, however that cannot be undone
-    function changeOwner(address _newOwner) onlyOwner {
+    function changeOwner(address _newOwner) public onlyOwner {
         owner = _newOwner;
     }
 }
@@ -52,13 +52,13 @@ contract Owned {
 ///  non-profit Campaign. This contract effectively dictates the terms of the
 ///  funding round.
 
-contract Campaign is TokenController, Owned {
+contract Campaign is IERC223bMiniMeTokenController, Owned, EnsPseudoIntrospectionSupport {
 
     uint public startFundingTime;       // In UNIX Time Format
     uint public endFundingTime;         // In UNIX Time Format
     uint public maximumFunding;         // In wei
     uint public totalCollected;         // In wei
-    MiniMeToken public tokenContract;   // The new token for this Campaign
+    ERC223bMiniMeToken public tokenContract;   // The new token for this Campaign
     address public vaultAddress;        // The address to hold the funds donated
 
 /// @notice 'Campaign()' initiates the Campaign by setting its funding
@@ -80,7 +80,7 @@ contract Campaign is TokenController, Owned {
         address _vaultAddress,
         address _tokenAddress
 
-    ) {
+    ) public {
         require ((_endFundingTime >= now) &&           // Cannot end in the past
             (_endFundingTime > _startFundingTime) &&
             (_maximumFunding <= 10000 ether) &&        // The Beta is limited
@@ -88,8 +88,10 @@ contract Campaign is TokenController, Owned {
         startFundingTime = _startFundingTime;
         endFundingTime = _endFundingTime;
         maximumFunding = _maximumFunding;
-        tokenContract = MiniMeToken(_tokenAddress);// The Deployed Token Contract
+        tokenContract = ERC223bMiniMeToken(_tokenAddress);// The Deployed Token Contract
         vaultAddress = _vaultAddress;
+        setInterfaceImplementation("IERC223bMiniMeTokenController", address(this));
+
     }
 
 /// @dev The fallback function is called when ether is sent to the contract, it
@@ -97,7 +99,7 @@ contract Campaign is TokenController, Owned {
 /// `_owner`. Payable is a required solidity modifier for functions to receive
 /// ether, without this modifier functions will throw if ether is sent to them
 
-    function ()  payable {
+    function ()  public payable {
         doPayment(msg.sender);
     }
 
@@ -109,7 +111,7 @@ contract Campaign is TokenController, Owned {
 /// have the tokens created in an address of their choosing
 /// @param _owner The address that will hold the newly created tokens
 
-    function proxyPayment(address _owner) payable returns(bool) {
+    function proxyPayment(address _owner) public payable returns(bool) {
         doPayment(_owner);
         return true;
     }
@@ -120,21 +122,10 @@ contract Campaign is TokenController, Owned {
 /// @param _to The destination of the transfer
 /// @param _amount The amount of the transfer
 /// @return False if the controller does not authorize the transfer
-    function onTransfer(address _from, address _to, uint _amount) returns(bool) {
+    function onTransfer(address _from, address _to, uint _amount, bytes _data) public returns(bool) {
         return true;
     }
 
-/// @notice Notifies the controller about an approval, for this Campaign all
-///  approvals are allowed by default and no extra notifications are needed
-/// @param _owner The address that calls `approve()`
-/// @param _spender The spender in the `approve()` call
-/// @param _amount The amount in the `approve()` call
-/// @return False if the controller does not authorize the approval
-    function onApprove(address _owner, address _spender, uint _amount)
-        returns(bool)
-    {
-        return true;
-    }
 
 
 /// @dev `doPayment()` is an internal function that sends the ether that this
@@ -155,11 +146,11 @@ contract Campaign is TokenController, Owned {
         totalCollected += msg.value;
 
 //Send the ether to the vault
-        require (vaultAddress.send(msg.value));
+        vaultAddress.transfer(msg.value);
 
 // Creates an equal amount of tokens as ether sent. The new tokens are created
 //  in the `_owner` address
-        require (tokenContract.generateTokens(_owner, msg.value));
+        require (tokenContract.generateTokens(_owner, msg.value, ""));
 
         return;
     }
@@ -169,7 +160,7 @@ contract Campaign is TokenController, Owned {
 ///  Campaign from receiving more ether
 /// @dev `finalizeFunding()` can only be called after the end of the funding period.
 
-    function finalizeFunding() {
+    function finalizeFunding() public {
         require(now >= endFundingTime);
         tokenContract.changeController(0);
     }
@@ -178,7 +169,7 @@ contract Campaign is TokenController, Owned {
 /// @notice `onlyOwner` changes the location that ether is sent
 /// @param _newVaultAddress The address that will receive the ether sent to this
 ///  Campaign
-    function setVault(address _newVaultAddress) onlyOwner {
+    function setVault(address _newVaultAddress) public onlyOwner {
         vaultAddress = _newVaultAddress;
     }
 
