@@ -131,15 +131,6 @@ describe('MiniMeToken test', () => {
     assert.equal(balance, 0);
   });
 
-  it('Should Destroy 3 tokens from 1 and 1 from 2', async () => {
-    await miniMeToken.destroyTokens(accounts[1], 3, { from: accounts[0], gas: 200000 });
-    b[4] = await web3.eth.getBlockNumber();
-    log(`b[4]->  ${b[4]}`);
-    const st = await miniMeTokenState.getState();
-    assert.equal(st.totalSupply, 7);
-    assert.equal(st.balances[accounts[1]], 6);
-  });
-
   it('Should Create the clone token', async () => {
     const miniMeTokenCloneTx = await miniMeToken.createCloneToken(
       'Clone Token 1',
