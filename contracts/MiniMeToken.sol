@@ -80,6 +80,9 @@ contract MiniMeToken is Controlled {
     // Flag that determines if the token is transferable or not.
     bool public transfersEnabled;
 
+    // Addresses for which transfers are on hold due to regulatory reasons
+    mapping (address => bool) regulatoryHold;
+
     // The factory used to create new clone tokens
     MiniMeTokenFactory public tokenFactory;
 
@@ -130,6 +133,7 @@ contract MiniMeToken is Controlled {
     /// @return Whether the transfer was successful or not
     function transfer(address _to, uint256 _amount) public returns (bool success) {
         require(transfersEnabled);
+        require(!regulatoryHold[msg.sender]);
         return doTransfer(msg.sender, _to, _amount);
     }
 
@@ -148,6 +152,7 @@ contract MiniMeToken is Controlled {
         //  another open source smart contract or 0x0
         if (msg.sender != controller) {
             require(transfersEnabled);
+            require(!regulatoryHold[_from]);
 
             // The standard ERC 20 transferFrom functionality
             if (allowed[_from][msg.sender] < _amount) return false;
@@ -393,6 +398,14 @@ contract MiniMeToken is Controlled {
     /// @param _transfersEnabled True if transfers are allowed in the clone
     function enableTransfers(bool _transfersEnabled) public onlyController {
         transfersEnabled = _transfersEnabled;
+    }
+
+    function regulatoryHold(address addr, bool onHold) public onlyController {
+        if(onHold) {
+            regulatoryHold[addr] = true;
+        } else {
+            delete regulatoryHold[addr];
+        }
     }
 
 ////////////////
