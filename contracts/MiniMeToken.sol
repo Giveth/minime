@@ -379,6 +379,7 @@ contract MiniMeToken is Controlled {
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         updateValueAtNow(balances[msg.sender], previousBalanceTo + _amount);
         Transfer(0, msg.sender, _amount);
+        TokensGenerated(_amount);
         return true;
     }
 
@@ -505,6 +506,7 @@ contract MiniMeToken is Controlled {
         address indexed _spender,
         uint256 _amount
         );
+    event TokensGenerated(uint tokenCount);
 
 }
 
