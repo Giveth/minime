@@ -51,6 +51,18 @@ and the state can be queried for a specific address:
 
     function isOnRegulatoryHold(address _addr) constant public returns (bool isOnHold)
 
+### Events
+
+The following events are available:
+
+    event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
+    event Transfer(address indexed _from, address indexed _to, uint256 _amount);
+    event NewCloneToken(address indexed _cloneToken, uint _snapshotBlock);
+    event Approval(address indexed _owner, address indexed _spender, uint256 _amount);
+    event TokensGenerated(uint _tokenCount);
+    event TransfersEnabled(bool _enabled);
+    event RegulatoryHold(address _addr, bool _onHold);
+
 ## Applications
 
 If this token contract is used as the base token, then clones of itself can be easily generated at any given block number, this allows for incredibly powerful functionality, effectively the ability for anyone to give extra features to the token holders without having to migrate to a new contract. Some of the applications that the MiniMe token contract can be used for are:
