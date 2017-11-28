@@ -146,18 +146,12 @@ contract MiniMeToken is Controlled {
     function transferFrom(address _from, address _to, uint256 _amount
     ) public returns (bool success) {
 
-        // The controller of this contract can move tokens around at will,
-        //  this is important to recognize! Confirm that you trust the
-        //  controller of this contract, which in most situations should be
-        //  another open source smart contract or 0x0
-        if (msg.sender != controller) {
-            require(transfersEnabled);
-            require(!regulatoryHold[_from]);
+        require(transfersEnabled);
+        require(!regulatoryHold[_from]);
 
-            // The standard ERC 20 transferFrom functionality
-            if (allowed[_from][msg.sender] < _amount) return false;
-            allowed[_from][msg.sender] -= _amount;
-        }
+        // The standard ERC 20 transferFrom functionality
+        if (allowed[_from][msg.sender] < _amount) return false;
+        allowed[_from][msg.sender] -= _amount;
         return doTransfer(_from, _to, _amount);
     }
 
@@ -373,19 +367,18 @@ contract MiniMeToken is Controlled {
 // Generate tokens
 ////////////////
 
-    /// @notice Generates `_amount` tokens that are assigned to `_owner`
-    /// @param _owner The address that will be assigned the new tokens
+    /// @notice Generates `_amount` tokens that are assigned to the contract controller
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
-    function generateTokens(address _owner, uint _amount
+    function generateTokens(uint _amount
     ) public onlyController returns (bool) {
         uint curTotalSupply = totalSupply();
         require(curTotalSupply + _amount >= curTotalSupply); // Check for overflow
-        uint previousBalanceTo = balanceOf(_owner);
+        uint previousBalanceTo = balanceOf(msg.sender);
         require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
-        updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
-        Transfer(0, _owner, _amount);
+        updateValueAtNow(balances[msg.sender], previousBalanceTo + _amount);
+        Transfer(0, msg.sender, _amount);
         return true;
     }
 
