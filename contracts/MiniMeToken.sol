@@ -404,8 +404,11 @@ contract MiniMeToken is Controlled {
         RegulatoryHold(addr, onHold);
     }
 
-    function isOnRegulatoryHold(address addr) constant public returns (bool isOnHold) {
-        return regulatoryHold[addr];
+    /// @notice Check whether `_addr` is on regulatory hold and temporarily unable to transfer
+    /// @param _addr The address to query
+    /// @return Whether the address is on hold or not
+    function isOnRegulatoryHold(address _addr) constant public returns (bool isOnHold) {
+        return regulatoryHold[_addr];
     }
 
 ////////////////
