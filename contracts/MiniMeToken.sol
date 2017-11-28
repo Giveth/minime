@@ -404,6 +404,10 @@ contract MiniMeToken is Controlled {
         RegulatoryHold(addr, onHold);
     }
 
+    function isOnRegulatoryHold(address addr) constant public returns (bool isOnHold) {
+        return regulatoryHold[addr];
+    }
+
 ////////////////
 // Internal helper functions to query and set a value in a snapshot array
 ////////////////
