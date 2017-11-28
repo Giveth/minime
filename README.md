@@ -26,25 +26,42 @@ All MiniMe Tokens maintain a history of the balance changes that occur during ea
 
     function balanceOfAt(address _holder, uint _blockNumber) constant returns (uint)
 
-### Optional token controller
+### Token controller
 
-The controller of the contract can generate/destroy/transfer tokens at its own discretion. The controller can be a regular account, but the intention is for the controller to be another contract that imposes transparent rules on the token's issuance and functionality. The Token Controller is not required for the MiniMe token to function, if there is no reason to generate/destroy/transfer tokens, the token controller can be set to 0x0 and this functionality will be disabled.
+The controller of the contract can generate tokens at its own discretion. The controller can be a regular account, but the intention is for the controller to be another contract that imposes transparent rules on the token's issuance and functionality.
 
-For example, a Token Creation contract can be set as the controller of the MiniMe Token and at the end of the token creation period, the controller can be transferred to the 0x0 address, to guarantee that no new tokens will be created.
+To create tokens, use this function:
 
-To create and destroy tokens, these two functions are introduced:
-
-    function generateTokens(address _holder, uint _value) onlyController
-
-    function destroyTokens(address _holder, uint _value) onlyController
+    function generateTokens(uint _value) onlyController
 
 ### The Token's Controller can freeze transfers.
 
-If transfersEnabled == false, tokens cannot be transferred by the users, however they can still be created, destroyed, and transferred by the controller. The controller can also toggle this flag.
+If transfersEnabled == false, tokens cannot be transferred by the users. The controller can also toggle this flag.
 
     // Allows tokens to be transferred if true or frozen if false
     function enableTransfers(bool _transfersEnabled) onlyController
 
+### The Token's Controller can put addresses on regulatory hold
+
+For regulatory reasons, sometimes an address may need to be put on hold (unable to transfer) pending legal investigation. The controller can toggle this flag:
+
+    function regulatoryHold(address addr, bool onHold) public onlyController
+
+and the state can be queried for a specific address:
+
+    function isOnRegulatoryHold(address _addr) constant public returns (bool isOnHold)
+
+### Events
+
+The following events are available:
+
+    event ClaimedTokens(address indexed _token, address indexed _controller, uint _amount);
+    event Transfer(address indexed _from, address indexed _to, uint256 _amount);
+    event NewCloneToken(address indexed _cloneToken, uint _snapshotBlock);
+    event Approval(address indexed _owner, address indexed _spender, uint256 _amount);
+    event TokensGenerated(uint _tokenCount);
+    event TransfersEnabled(bool _enabled);
+    event RegulatoryHold(address _addr, bool _onHold);
 
 ## Applications
 
