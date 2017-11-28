@@ -392,6 +392,7 @@ contract MiniMeToken is Controlled {
     /// @param _transfersEnabled True if transfers are allowed in the clone
     function enableTransfers(bool _transfersEnabled) public onlyController {
         transfersEnabled = _transfersEnabled;
+        TransfersEnabled(bool _transfersEnabled);
     }
 
     function regulatoryHold(address addr, bool onHold) public onlyController {
@@ -400,6 +401,14 @@ contract MiniMeToken is Controlled {
         } else {
             delete regulatoryHold[addr];
         }
+        RegulatoryHold(addr, onHold);
+    }
+
+    /// @notice Check whether `_addr` is on regulatory hold and temporarily unable to transfer
+    /// @param _addr The address to query
+    /// @return Whether the address is on hold or not
+    function isOnRegulatoryHold(address _addr) constant public returns (bool isOnHold) {
+        return regulatoryHold[_addr];
     }
 
 ////////////////
@@ -507,6 +516,8 @@ contract MiniMeToken is Controlled {
         uint256 _amount
         );
     event TokensGenerated(uint tokenCount);
+    event TransfersEnabled(bool enabled);
+    event RegulatoryHold(address addr, bool onHold);
 
 }
 
