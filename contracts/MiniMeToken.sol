@@ -395,13 +395,13 @@ contract MiniMeToken is Controlled {
         TransfersEnabled(bool _transfersEnabled);
     }
 
-    function regulatoryHold(address addr, bool onHold) public onlyController {
-        if(onHold) {
-            regulatoryHold[addr] = true;
+    function regulatoryHold(address _addr, bool _onHold) public onlyController {
+        if(_onHold) {
+            regulatoryHold[_addr] = true;
         } else {
-            delete regulatoryHold[addr];
+            delete regulatoryHold[_addr];
         }
-        RegulatoryHold(addr, onHold);
+        RegulatoryHold(_addr, _onHold);
     }
 
     /// @notice Check whether `_addr` is on regulatory hold and temporarily unable to transfer
@@ -515,9 +515,9 @@ contract MiniMeToken is Controlled {
         address indexed _spender,
         uint256 _amount
         );
-    event TokensGenerated(uint tokenCount);
-    event TransfersEnabled(bool enabled);
-    event RegulatoryHold(address addr, bool onHold);
+    event TokensGenerated(uint _tokenCount);
+    event TransfersEnabled(bool _enabled);
+    event RegulatoryHold(address _addr, bool _onHold);
 
 }
 
