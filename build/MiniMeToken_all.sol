@@ -129,6 +129,9 @@ contract MiniMeToken is Controlled {
     // Flag that determines if the token is transferable or not.
     bool public transfersEnabled;
 
+    // Addresses for which transfers are on hold due to regulatory reasons
+    mapping (address => bool) regulatoryHold;
+
     // The factory used to create new clone tokens
     MiniMeTokenFactory public tokenFactory;
 
@@ -179,6 +182,7 @@ contract MiniMeToken is Controlled {
     /// @return Whether the transfer was successful or not
     function transfer(address _to, uint256 _amount) public returns (bool success) {
         require(transfersEnabled);
+        require(!regulatoryHold[msg.sender]);
         return doTransfer(msg.sender, _to, _amount);
     }
 
@@ -191,17 +195,12 @@ contract MiniMeToken is Controlled {
     function transferFrom(address _from, address _to, uint256 _amount
     ) public returns (bool success) {
 
-        // The controller of this contract can move tokens around at will,
-        //  this is important to recognize! Confirm that you trust the
-        //  controller of this contract, which in most situations should be
-        //  another open source smart contract or 0x0
-        if (msg.sender != controller) {
-            require(transfersEnabled);
+        require(transfersEnabled);
+        require(!regulatoryHold[_from]);
 
-            // The standard ERC 20 transferFrom functionality
-            if (allowed[_from][msg.sender] < _amount) return false;
-            allowed[_from][msg.sender] -= _amount;
-        }
+        // The standard ERC 20 transferFrom functionality
+        if (allowed[_from][msg.sender] < _amount) return false;
+        allowed[_from][msg.sender] -= _amount;
         return doTransfer(_from, _to, _amount);
     }
 
@@ -414,39 +413,21 @@ contract MiniMeToken is Controlled {
     }
 
 ////////////////
-// Generate and destroy tokens
+// Generate tokens
 ////////////////
 
-    /// @notice Generates `_amount` tokens that are assigned to `_owner`
-    /// @param _owner The address that will be assigned the new tokens
+    /// @notice Generates `_amount` tokens that are assigned to the contract controller
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
-    function generateTokens(address _owner, uint _amount
-    ) public onlyController returns (bool) {
+    function generateTokens(uint _amount) public onlyController returns (bool) {
         uint curTotalSupply = totalSupply();
         require(curTotalSupply + _amount >= curTotalSupply); // Check for overflow
-        uint previousBalanceTo = balanceOf(_owner);
+        uint previousBalanceTo = balanceOf(msg.sender);
         require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
-        updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
-        Transfer(0, _owner, _amount);
-        return true;
-    }
-
-
-    /// @notice Burns `_amount` tokens from `_owner`
-    /// @param _owner The address that will lose the tokens
-    /// @param _amount The quantity of tokens to burn
-    /// @return True if the tokens are burned correctly
-    function destroyTokens(address _owner, uint _amount
-    ) onlyController public returns (bool) {
-        uint curTotalSupply = totalSupply();
-        require(curTotalSupply >= _amount);
-        uint previousBalanceFrom = balanceOf(_owner);
-        require(previousBalanceFrom >= _amount);
-        updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
-        updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
-        Transfer(_owner, 0, _amount);
+        updateValueAtNow(balances[msg.sender], previousBalanceTo + _amount);
+        Transfer(0, msg.sender, _amount);
+        TokensGenerated(_amount);
         return true;
     }
 
@@ -459,6 +440,23 @@ contract MiniMeToken is Controlled {
     /// @param _transfersEnabled True if transfers are allowed in the clone
     function enableTransfers(bool _transfersEnabled) public onlyController {
         transfersEnabled = _transfersEnabled;
+        TransfersEnabled(_transfersEnabled);
+    }
+
+    function putOnRegulatoryHold(address _addr, bool _onHold) public onlyController {
+        if(_onHold) {
+            regulatoryHold[_addr] = true;
+        } else {
+            delete regulatoryHold[_addr];
+        }
+        RegulatoryHold(_addr, _onHold);
+    }
+
+    /// @notice Check whether `_addr` is on regulatory hold and temporarily unable to transfer
+    /// @param _addr The address to query
+    /// @return Whether the address is on hold or not
+    function isOnRegulatoryHold(address _addr) constant public returns (bool isOnHold) {
+        return regulatoryHold[_addr];
     }
 
 ////////////////
@@ -565,6 +563,9 @@ contract MiniMeToken is Controlled {
         address indexed _spender,
         uint256 _amount
         );
+    event TokensGenerated(uint _tokenCount);
+    event TransfersEnabled(bool _enabled);
+    event RegulatoryHold(address _addr, bool _onHold);
 
 }
 

@@ -370,8 +370,7 @@ contract MiniMeToken is Controlled {
     /// @notice Generates `_amount` tokens that are assigned to the contract controller
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
-    function generateTokens(uint _amount
-    ) public onlyController returns (bool) {
+    function generateTokens(uint _amount) public onlyController returns (bool) {
         uint curTotalSupply = totalSupply();
         require(curTotalSupply + _amount >= curTotalSupply); // Check for overflow
         uint previousBalanceTo = balanceOf(msg.sender);
