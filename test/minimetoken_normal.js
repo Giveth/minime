@@ -139,7 +139,8 @@ describe('MiniMeToken test', () => {
             18,
             'MMTc',
             0,
-            true
+            true,
+            {from: accounts[1]}
         );
 
         let addr = miniMeTokenCloneTx.events.NewCloneToken.raw.topics[1];
@@ -149,20 +150,20 @@ describe('MiniMeToken test', () => {
 
         miniMeTokenCloneState = new MiniMeTokenState(miniMeTokenClone);
 
-        b[5] = await web3.eth.getBlockNumber();
-        log(`b[5]->  ${b[5]}`);
+        b[4] = await web3.eth.getBlockNumber();
+        log(`b[4]->  ${b[4]}`);
         const st = await miniMeTokenCloneState.getState();
 
         assert.equal(st.parentToken, miniMeToken.$address);
-        assert.equal(st.parentSnapShotBlock, b[5]);
-        assert.equal(st.totalSupply, 7);
-        assert.equal(st.balances[accounts[1]], 6);
+        assert.equal(st.parentSnapShotBlock, b[4]);
+        assert.equal(st.totalSupply, 10);
+        assert.equal(st.balances[accounts[1]], 9);
 
-        const totalSupply = await miniMeTokenClone.totalSupplyAt(b[4]);
+        const totalSupply = await miniMeTokenClone.totalSupplyAt(b[3]);
 
-        assert.equal(totalSupply, 7);
+        assert.equal(totalSupply, 10);
 
-        const balance = await miniMeTokenClone.balanceOfAt(accounts[2], b[4]);
+        const balance = await miniMeTokenClone.balanceOfAt(accounts[2], b[3]);
         assert.equal(balance, 1);
     }).timeout(6000);
 
@@ -172,41 +173,41 @@ describe('MiniMeToken test', () => {
 
     it('Should move tokens in the clone token from 2 to 3', async () => {
         await miniMeTokenClone.transfer(accounts[2], 4, { from: accounts[1] });
-        b[6] = await web3.eth.getBlockNumber();
-        log(`b[6]->  ${b[6]}`);
+        b[5] = await web3.eth.getBlockNumber();
+        log(`b[5]->  ${b[5]}`);
 
         const st = await miniMeTokenCloneState.getState();
-        assert.equal(st.totalSupply, 7);
-        assert.equal(st.balances[accounts[1]], 2);
+        assert.equal(st.totalSupply, 10);
+        assert.equal(st.balances[accounts[1]], 5);
         assert.equal(st.balances[accounts[2]], 5);
 
         let balance;
 
-        balance = await miniMeToken.balanceOfAt(accounts[1], b[5]);
-        assert.equal(balance, 6);
-        balance = await miniMeToken.balanceOfAt(accounts[2], b[5]);
+        balance = await miniMeToken.balanceOfAt(accounts[1], b[4]);
+        assert.equal(balance, 9);
+        balance = await miniMeToken.balanceOfAt(accounts[2], b[4]);
         assert.equal(balance, 1);
         balance = await miniMeTokenClone.balanceOfAt(accounts[1], b[5]);
-        assert.equal(balance, 6);
+        assert.equal(balance, 5);
         balance = await miniMeTokenClone.balanceOfAt(accounts[2], b[5]);
-        assert.equal(balance, 1);
-        balance = await miniMeTokenClone.balanceOfAt(accounts[1], b[4]);
-        assert.equal(balance, 6);
-        balance = await miniMeTokenClone.balanceOfAt(accounts[2], b[4]);
+        assert.equal(balance, 5);
+        balance = await miniMeTokenClone.balanceOfAt(accounts[1], b[3]);
+        assert.equal(balance, 9);
+        balance = await miniMeTokenClone.balanceOfAt(accounts[2], b[3]);
         assert.equal(balance, 1);
 
         let totalSupply;
         totalSupply = await miniMeTokenClone.totalSupplyAt(b[5]);
-        assert.equal(totalSupply, 7);
+        assert.equal(totalSupply, 10);
         totalSupply = await miniMeTokenClone.totalSupplyAt(b[4]);
-        assert.equal(totalSupply, 7);
+        assert.equal(totalSupply, 10);
     }).timeout(6000);
 
     it('Should create tokens in the child token', async () => {
-        await miniMeTokenClone.generateTokens(accounts[1], 10, { from: accounts[0], gas: 300000 });
+        await miniMeTokenClone.generateTokens(10, { from: accounts[1], gas: 300000 });
         const st = await miniMeTokenCloneState.getState();
-        assert.equal(st.totalSupply, 17);
-        assert.equal(st.balances[accounts[1]], 12);
+        assert.equal(st.totalSupply, 20);
+        assert.equal(st.balances[accounts[1]], 15);
         assert.equal(st.balances[accounts[2]], 5);
     });
 });
