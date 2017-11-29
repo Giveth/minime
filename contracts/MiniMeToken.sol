@@ -392,10 +392,10 @@ contract MiniMeToken is Controlled {
     /// @param _transfersEnabled True if transfers are allowed in the clone
     function enableTransfers(bool _transfersEnabled) public onlyController {
         transfersEnabled = _transfersEnabled;
-        TransfersEnabled(bool _transfersEnabled);
+        TransfersEnabled(_transfersEnabled);
     }
 
-    function regulatoryHold(address _addr, bool _onHold) public onlyController {
+    function putOnRegulatoryHold(address _addr, bool _onHold) public onlyController {
         if(_onHold) {
             regulatoryHold[_addr] = true;
         } else {
