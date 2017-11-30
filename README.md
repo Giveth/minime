@@ -45,7 +45,7 @@ If transfersEnabled == false, tokens cannot be transferred by the users. The con
 
 For regulatory reasons, sometimes an address may need to be put on hold (unable to transfer) pending legal investigation. The controller can toggle this flag:
 
-    function regulatoryHold(address addr, bool onHold) public onlyController
+    function putOnRegulatoryHold(address addr, bool onHold) public onlyController
 
 and the state can be queried for a specific address:
 
@@ -84,5 +84,3 @@ All these applications and more are enabled by the MiniMe Token Contract. The mo
 2. Deploy the MinimeToken
 3. Deploy the campaign
 4. Assign the controller of the MinimeToken to the campaign.
-
-
