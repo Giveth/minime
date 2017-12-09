@@ -179,7 +179,8 @@ contract MiniMeToken is Controlled {
     /// @return Whether the transfer was successful or not
     function transfer(address _to, uint256 _amount) public returns (bool success) {
         require(transfersEnabled);
-        return doTransfer(msg.sender, _to, _amount);
+        doTransfer(msg.sender, _to, _amount);
+        return true;
     }
 
     /// @notice Send `_amount` tokens to `_to` from `_from` on the condition it
@@ -199,10 +200,11 @@ contract MiniMeToken is Controlled {
             require(transfersEnabled);
 
             // The standard ERC 20 transferFrom functionality
-            if (allowed[_from][msg.sender] < _amount) return false;
+            require(allowed[_from][msg.sender] >= _amount);
             allowed[_from][msg.sender] -= _amount;
         }
-        return doTransfer(_from, _to, _amount);
+        doTransfer(_from, _to, _amount);
+        return true;
     }
 
     /// @dev This is the actual transfer function in the token contract, it can
@@ -212,10 +214,11 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be transferred
     /// @return True if the transfer was successful
     function doTransfer(address _from, address _to, uint _amount
-    ) internal returns(bool) {
+    ) internal {
 
            if (_amount == 0) {
-               return true;
+               Transfer(_from, _to, _amount);    // Follow the spec to louch the event when transfer 0
+               return;
            }
 
            require(parentSnapShotBlock < block.number);
@@ -224,11 +227,10 @@ contract MiniMeToken is Controlled {
            require((_to != 0) && (_to != address(this)));
 
            // If the amount being transfered is more than the balance of the
-           //  account the transfer returns false
+           //  account the transfer throws
            var previousBalanceFrom = balanceOfAt(_from, block.number);
-           if (previousBalanceFrom < _amount) {
-               return false;
-           }
+
+           require(previousBalanceFrom >= _amount);
 
            // Alerts the token controller of the transfer
            if (isContract(controller)) {
@@ -248,7 +250,6 @@ contract MiniMeToken is Controlled {
            // An event to make the transfer easy to find on the blockchain
            Transfer(_from, _to, _amount);
 
-           return true;
     }
 
     /// @param _owner The address that's balance is being requested
