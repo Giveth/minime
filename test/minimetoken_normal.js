@@ -52,9 +52,8 @@ describe('MiniMeToken test', () => {
         accounts = await web3.eth.getAccounts();
     });
 
-    after((done) => {
+    after(() => {
         testrpc.close();
-        done();
     });
 
     it('should deploy all the contracts', async () => {
