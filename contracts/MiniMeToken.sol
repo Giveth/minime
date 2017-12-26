@@ -408,7 +408,7 @@ contract MiniMeToken is Controlled {
 
 
     /// @notice Enables token holders to transfer their tokens freely if true
-    /// @param _transfersEnabled True if transfers are allowed in the clone
+    /// @param _transfersEnabled True if transfers are allowed
     function enableTransfers(bool _transfersEnabled) public onlyController {
         transfersEnabled = _transfersEnabled;
     }
