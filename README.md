@@ -1,4 +1,4 @@
-![MiniMe Token](readme-header.png)
+![Bitcoin Ship Token](header.png)
 
 [![Build Status](https://travis-ci.org/Giveth/minime.svg?branch=master)](https://travis-ci.org/Giveth/minime)
 
