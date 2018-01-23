@@ -1,4 +1,4 @@
-![Bitcoin Ship Token](header.png)
+![BitcoinShip](header.png)
 
 [![Build Status](https://travis-ci.org/Giveth/minime.svg?branch=master)](https://travis-ci.org/Giveth/minime)
 
