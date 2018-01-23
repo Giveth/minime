@@ -1,8 +1,8 @@
-![MiniMe Token](readme-header.png)
+![BitcoinShip](https://user-images.githubusercontent.com/28312066/35280363-064e6a7a-001e-11e8-87a0-8e0965d7494e.png)
 
 [![Build Status](https://travis-ci.org/Giveth/minime.svg?branch=master)](https://travis-ci.org/Giveth/minime)
 
-The MiniMeToken contract is a standard ERC20 token with extra functionality:
+The Bitcoin Ship "INVESTORS" contract is a standard ERC20 token with extra functionality:
 
 ### The token is easy to clone!
 
@@ -63,9 +63,9 @@ All these applications and more are enabled by the MiniMe Token Contract. The mo
 
 # How to deploy a campaign
 
-1. Deploy the MinimeTokenFactory
-2. Deploy the MinimeToken
+1. Deploy the BitcoinShipTokenFactory
+2. Deploy the BitcoinShipToken
 3. Deploy the campaign
-4. Assign the controller of the MinimeToken to the campaign.
+4. Assign the controller of the BitcoinShipToken to the campaign.
 
 
