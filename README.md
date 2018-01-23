@@ -1,4 +1,4 @@
-![BitcoinShip](https://user-images.githubusercontent.com/28312066/35278884-625ac250-0019-11e8-9e69-b17c969b6107.jpg)
+![BitcoinShip](https://user-images.githubusercontent.com/28312066/35278884-625ac250-0019-11e8-9e69-b17c969b6107.jpghttps://user-images.githubusercontent.com/28312066/35280002-ca52082a-001c-11e8-86de-7beaa2a2e1f7.png)
 
 [![Build Status](https://travis-ci.org/Giveth/minime.svg?branch=master)](https://travis-ci.org/Giveth/minime)
 
