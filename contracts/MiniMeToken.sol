@@ -168,7 +168,7 @@ contract MiniMeToken is Controlled {
     ) internal {
 
            if (_amount == 0) {
-               Transfer(_from, _to, _amount);    // Follow the spec to louch the event when transfer 0
+               Transfer(_from, _to, _amount);    // Follow the spec to launch the event when transfer 0
                return;
            }
 
