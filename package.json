@@ -32,20 +32,10 @@
   },
   "homepage": "https://github.com/Giveth/minime",
   "dependencies": {
-    "eth-contract-class": "0.0.6"
   },
   "devDependencies": {
-    "babel-eslint": "^7.2.3",
-    "eslint-config-airbnb": "^15.0.1",
-    "eslint-plugin-import": "^2.6.0",
-    "eslint-plugin-jsx-a11y": "^6.0.2",
-    "eslint-plugin-react": "^7.1.0",
-    "ethereumjs-testrpc": "git://github.com/perissology/testrpc.git#81216dbc",
-    "lerna": "^2.2.0",
-    "random-bytes": "^1.0.0",
-    "mocha": "^3.5.0",
-    "solcpiler": "0.0.6",
-    "web3": "git://github.com/perissology/web3.js.git#all_fixes",
-    "chai": "^4.1.0"
+    "web3": "^1.0.0-beta.36",
+    "bignumber.js": "^8.0.1",
+    "ganache-cli": "^6.1.8"
   }
 }

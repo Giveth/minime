@@ -7,7 +7,7 @@ contract Controlled {
 
     address public controller;
 
-    function Controlled() public { controller = msg.sender;}
+    constructor() public { controller = msg.sender;}
 
     /// @notice Changes the controller of the contract
     /// @param _newController The new controller of the contract

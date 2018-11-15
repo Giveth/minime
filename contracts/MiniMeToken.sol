@@ -100,7 +100,7 @@ contract MiniMeToken is Controlled {
     /// @param _decimalUnits Number of decimals of the new token
     /// @param _tokenSymbol Token Symbol for the new token
     /// @param _transfersEnabled If true, tokens will be able to be transferred
-    function MiniMeToken(
+    constructor (
         address _tokenFactory,
         address _parentToken,
         uint _parentSnapShotBlock,
@@ -168,7 +168,7 @@ contract MiniMeToken is Controlled {
     ) internal {
 
            if (_amount == 0) {
-               Transfer(_from, _to, _amount);    // Follow the spec to louch the event when transfer 0
+               emit Transfer(_from, _to, _amount);    // Follow the spec to louch the event when transfer 0
                return;
            }
 
@@ -179,7 +179,7 @@ contract MiniMeToken is Controlled {
 
            // If the amount being transfered is more than the balance of the
            //  account the transfer throws
-           var previousBalanceFrom = balanceOfAt(_from, block.number);
+           uint previousBalanceFrom = balanceOfAt(_from, block.number);
 
            require(previousBalanceFrom >= _amount);
 
@@ -194,12 +194,12 @@ contract MiniMeToken is Controlled {
 
            // Then update the balance array with the new value for the address
            //  receiving the tokens
-           var previousBalanceTo = balanceOfAt(_to, block.number);
+           uint previousBalanceTo = balanceOfAt(_to, block.number);
            require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
            updateValueAtNow(balances[_to], previousBalanceTo + _amount);
 
            // An event to make the transfer easy to find on the blockchain
-           Transfer(_from, _to, _amount);
+           emit Transfer(_from, _to, _amount);
 
     }
 
@@ -230,7 +230,7 @@ contract MiniMeToken is Controlled {
         }
 
         allowed[msg.sender][_spender] = _amount;
-        Approval(msg.sender, _spender, _amount);
+        emit Approval(msg.sender, _spender, _amount);
         return true;
     }
 
@@ -361,7 +361,7 @@ contract MiniMeToken is Controlled {
         cloneToken.changeController(msg.sender);
 
         // An event to make the token easy to find on the blockchain
-        NewCloneToken(address(cloneToken), _snapshotBlock);
+        emit NewCloneToken(address(cloneToken), _snapshotBlock);
         return address(cloneToken);
     }
 
@@ -381,7 +381,7 @@ contract MiniMeToken is Controlled {
         require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
-        Transfer(0, _owner, _amount);
+        emit Transfer(0, _owner, _amount);
         return true;
     }
 
@@ -398,7 +398,7 @@ contract MiniMeToken is Controlled {
         require(previousBalanceFrom >= _amount);
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
         updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
-        Transfer(_owner, 0, _amount);
+        emit Transfer(_owner, 0, _amount);
         return true;
     }
 
@@ -496,14 +496,14 @@ contract MiniMeToken is Controlled {
     ///  set to 0 in case you want to extract ether.
     function claimTokens(address _token) public onlyController {
         if (_token == 0x0) {
-            controller.transfer(this.balance);
+            controller.transfer(address(this).balance);
             return;
         }
 
         MiniMeToken token = MiniMeToken(_token);
         uint balance = token.balanceOf(this);
         token.transfer(controller, balance);
-        ClaimedTokens(_token, controller, balance);
+        emit ClaimedTokens(_token, controller, balance);
     }
 
 ////////////////
