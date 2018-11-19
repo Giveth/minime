@@ -177,16 +177,16 @@ contract MiniMeToken is Controlled {
            // Do not allow transfer to 0x0 or the token contract itself
            require((_to != 0) && (_to != address(this)));
 
+           // Alerts the token controller of the transfer
+           if (isContract(controller)) {
+               require(TokenController(controller).onTransfer(_from, _to, _amount));
+           }
+
            // If the amount being transfered is more than the balance of the
            //  account the transfer throws
            var previousBalanceFrom = balanceOfAt(_from, block.number);
 
            require(previousBalanceFrom >= _amount);
-
-           // Alerts the token controller of the transfer
-           if (isContract(controller)) {
-               require(TokenController(controller).onTransfer(_from, _to, _amount));
-           }
 
            // First update the balance array with the new value for the address
            //  sending the tokens
