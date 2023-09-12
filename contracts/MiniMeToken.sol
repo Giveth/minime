@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
+error TransfersDisabled();
+error ParentSnapshotNotReached();
+error NotEnoughBalance();
+error NotEnoughAllowance();
+error NotEnoughSupply();
+error InvalidDestination();
+error ControllerRejected();
+error Overflow();
+error AllowanceAlreadySet();
+error OperationFailed();
+error ControllerNotSet();
 /*
     Copyright 2016, Jordi Baylina
 
@@ -125,7 +136,7 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be transferred
     /// @return success Whether the transfer was successful or not
     function transfer(address _to, uint256 _amount) public returns (bool success) {
-        require(transfersEnabled, "Transfers are not enabled");
+        if (!transfersEnabled) revert TransfersDisabled();
         doTransfer(msg.sender, _to, _amount);
         return true;
     }
@@ -142,10 +153,10 @@ contract MiniMeToken is Controlled {
         //  controller of this contract, which in most situations should be
         //  another open source smart contract or 0x0
         if (msg.sender != controller) {
-            require(transfersEnabled, "Transfers are not enabled");
+            if (!transfersEnabled) revert TransfersDisabled();
 
             // The standard ERC 20 transferFrom functionality
-            require(allowed[_from][msg.sender] >= _amount, "Not enough allowed balance");
+            if (allowed[_from][msg.sender] < _amount) revert NotEnoughAllowance();
             allowed[_from][msg.sender] -= _amount;
         }
         doTransfer(_from, _to, _amount);
@@ -163,20 +174,22 @@ contract MiniMeToken is Controlled {
             return;
         }
 
-        require(parentSnapShotBlock < block.number, "Parent snapshot not reached");
+        if (parentSnapShotBlock >= block.number) revert ParentSnapshotNotReached();
 
         // Do not allow transfer to 0x0 or the token contract itself
-        require((_to != address(0)) && (_to != address(this)), "Invalid destination");
+        if ((_to == address(0)) || (_to == address(this))) revert InvalidDestination();
 
         // If the amount being transfered is more than the balance of the
         //  account the transfer throws
         uint256 previousBalanceFrom = balanceOfAt(_from, block.number);
 
-        require(previousBalanceFrom >= _amount, "Not enough balance");
+        if (previousBalanceFrom < _amount) revert NotEnoughBalance();
 
         // Alerts the token controller of the transfer
         if (isContract(controller)) {
-            require(TokenController(controller).onTransfer(_from, _to, _amount), "Controller rejected transfer");
+            if (!TokenController(controller).onTransfer(_from, _to, _amount)) {
+                revert ControllerRejected();
+            }
         }
 
         // First update the balance array with the new value for the address
@@ -186,7 +199,7 @@ contract MiniMeToken is Controlled {
         // Then update the balance array with the new value for the address
         //  receiving the tokens
         uint256 previousBalanceTo = balanceOfAt(_to, block.number);
-        require(previousBalanceTo + _amount >= previousBalanceTo, "Balance overflow"); // Check for overflow
+        if (previousBalanceTo + _amount < previousBalanceTo) revert Overflow(); // Check for overflow
         updateValueAtNow(balances[_to], previousBalanceTo + _amount);
 
         // An event to make the transfer easy to find on the blockchain
@@ -206,19 +219,19 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return success True if the approval was successful
     function approve(address _spender, uint256 _amount) public returns (bool success) {
-        require(transfersEnabled, "Transfers are not enabled");
+        if (!transfersEnabled) revert TransfersDisabled();
 
         // To change the approve amount you first have to reduce the addresses`
         //  allowance to zero by calling `approve(_spender,0)` if it is not
         //  already 0 to mitigate the race condition described here:
         //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-        require((_amount == 0) || (allowed[msg.sender][_spender] == 0), "First reset allowance");
+        if ((_amount != 0) && (allowed[msg.sender][_spender] != 0)) revert AllowanceAlreadySet();
 
         // Alerts the token controller of the approve function call
         if (isContract(controller)) {
-            require(
-                TokenController(controller).onApprove(msg.sender, _spender, _amount), "Controller rejected allowance"
-            );
+            if (!TokenController(controller).onApprove(msg.sender, _spender, _amount)) {
+                revert ControllerRejected();
+            }
         }
 
         allowed[msg.sender][_spender] = _amount;
@@ -243,7 +256,7 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return success True if the function call was successful
     function approveAndCall(address _spender, uint256 _amount, bytes memory _extraData) public returns (bool success) {
-        require(approve(_spender, _amount), "Approve failed");
+        if (!approve(_spender, _amount)) revert OperationFailed();
 
         ApproveAndCallFallBack(_spender).receiveApproval(msg.sender, _amount, address(this), _extraData);
 
@@ -352,9 +365,9 @@ contract MiniMeToken is Controlled {
     /// @return True if the tokens are generated correctly
     function generateTokens(address _owner, uint256 _amount) public onlyController returns (bool) {
         uint256 curTotalSupply = totalSupply();
-        require(curTotalSupply + _amount >= curTotalSupply, "Total supply overflow"); // Check for overflow
+        if (curTotalSupply + _amount < curTotalSupply) revert Overflow(); // Check for overflow
         uint256 previousBalanceTo = balanceOf(_owner);
-        require(previousBalanceTo + _amount >= previousBalanceTo, "Balance overflow"); // Check for overflow
+        if (previousBalanceTo + _amount < previousBalanceTo) revert Overflow(); // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
         emit Transfer(address(0), _owner, _amount);
@@ -367,9 +380,9 @@ contract MiniMeToken is Controlled {
     /// @return True if the tokens are burned correctly
     function destroyTokens(address _owner, uint256 _amount) public onlyController returns (bool) {
         uint256 curTotalSupply = totalSupply();
-        require(curTotalSupply >= _amount, "Not enough supply");
+        if (curTotalSupply < _amount) revert NotEnoughSupply();
         uint256 previousBalanceFrom = balanceOf(_owner);
-        require(previousBalanceFrom >= _amount, "Not enough balance");
+        if (previousBalanceFrom < _amount) revert NotEnoughBalance();
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
         updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
         emit Transfer(_owner, address(0), _amount);
@@ -454,8 +467,10 @@ contract MiniMeToken is Controlled {
     ///  set to 0, then the `proxyPayment` method is called which relays the
     ///  ether and creates tokens as described in the token controller contract
     receive() external payable {
-        require(isContract(controller), "Controller not set");
-        require(TokenController(controller).proxyPayment{ value: msg.value }(msg.sender), "Controller rejected payment");
+        if (!isContract(controller)) revert ControllerNotSet();
+        if (!TokenController(controller).proxyPayment{ value: msg.value }(msg.sender)) {
+            revert ControllerRejected();
+        }
     }
 
     //////////

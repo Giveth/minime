@@ -28,13 +28,20 @@ pragma solidity ^0.8.0;
 import { MiniMeToken } from "./MiniMeToken.sol";
 import { TokenController } from "./TokenController.sol";
 
+error NotAuthorized();
+error InvalidParameters();
+error PaymentRejected();
+error TransferFailed(address destination);
+error TokenMintFailed();
+error FundingPeriodNotOver();
+
 /// @dev `Owned` is a base level contract that assigns an `owner` that can be
 ///  later changed
 contract Owned {
     /// @dev `owner` is the only address that can call a function with this
     /// modifier
     modifier onlyOwner() {
-        require(msg.sender == owner, "Not authorized");
+        if (msg.sender != owner) revert NotAuthorized();
         _;
     }
 
@@ -137,25 +144,25 @@ contract Campaign is TokenController, Owned {
     ///  contract receives to the `vault` and creates tokens in the address of the
     ///  `_owner` assuming the Campaign is still accepting funds
     /// @param _owner The address that will hold the newly created tokens
-
     function doPayment(address _owner) internal {
         // First check that the Campaign is allowed to receive this donation
-        require(
-            (block.timestamp >= startFundingTime) && (block.timestamp <= endFundingTime)
-                && (tokenContract.controller() != address(0)) // Extra check
-                && (msg.value != 0) && (totalCollected + msg.value <= maximumFunding),
-            "Payment rejected"
-        );
+        if (
+            (block.timestamp > startFundingTime) || (block.timestamp > endFundingTime)
+                || (tokenContract.controller() == address(0)) // Extra check
+                || (msg.value == 0) || (totalCollected + msg.value > maximumFunding)
+        ) {
+            revert PaymentRejected();
+        }
 
         //Track how much the Campaign has collected
         totalCollected += msg.value;
 
         //Send the ether to the vault
-        require(vaultAddress.send(msg.value), "Vault transfer failed");
+        if (!vaultAddress.send(msg.value)) revert TransferFailed(vaultAddress);
 
         // Creates an equal amount of tokens as ether sent. The new tokens are created
         //  in the `_owner` address
-        require(tokenContract.generateTokens(_owner, msg.value), "Token mint failed");
+        if (!tokenContract.generateTokens(_owner, msg.value)) revert TokenMintFailed();
 
         return;
     }
@@ -166,7 +173,7 @@ contract Campaign is TokenController, Owned {
     /// @dev `finalizeFunding()` can only be called after the end of the funding period.
 
     function finalizeFunding() external {
-        require(block.timestamp >= endFundingTime, "Funding period not over");
+        if (block.timestamp > endFundingTime) revert FundingPeriodNotOver();
         tokenContract.changeController(payable(address(0)));
     }
 

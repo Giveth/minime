@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
+error NotAuthorized();
+
 contract Controlled {
     /// @notice The address of the controller is the only address that can call
     ///  a function with this modifier
     modifier onlyController() {
-        require(msg.sender == controller, "Not authorized");
+        if (msg.sender != controller) revert NotAuthorized();
         _;
     }
 
