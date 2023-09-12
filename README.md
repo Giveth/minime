@@ -1,71 +1,201 @@
-![MiniMe Token](readme-header.png)
+# Foundry Template [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
 
-[![Build Status](https://travis-ci.org/Giveth/minime.svg?branch=master)](https://travis-ci.org/Giveth/minime)
+[gha]: https://github.com/vacp2p/foundry-template/actions
+[gha-badge]: https://github.com/vacp2p/foundry-template/actions/workflows/ci.yml/badge.svg
+[foundry]: https://getfoundry.sh/
+[foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
+[license]: https://opensource.org/licenses/MIT
+[license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-The MiniMeToken contract is a standard ERC20 token with extra functionality:
+A Foundry-based template for developing Solidity smart contracts, with sensible defaults.
 
-### The token is easy to clone!
+This is a fork of [PaulRBerg's template](https://github.com/PaulRBerg/foundry-template) and adjusted to Vac's smart
+contracts unit's needs. See [Upstream differences](#upstream-differences) to learn more about how this template differs
+from Paul's.
 
-Anybody can create a new clone token from any token using this contract with an initial distribution identical to the original token at a specified block. The address calling the `createCloneToken` function will become the token controller and the token's default settings can be specified in the function call.
+## What's Inside
 
-    function createCloneToken(
-        string _cloneTokenName,
-        uint8 _cloneDecimalUnits,
-        string _cloneTokenSymbol,
-        uint _snapshotBlock,
-        bool _isConstant
-        ) returns(address) {
+- [Forge](https://github.com/foundry-rs/foundry/blob/master/forge): compile, test, fuzz, format, and deploy smart
+  contracts
+- [Forge Std](https://github.com/foundry-rs/forge-std): collection of helpful contracts and cheatcodes for testing
+- [Solhint Community](https://github.com/solhint-community/solhint-community): linter for Solidity code
 
-Once the clone token is created, it acts as a completely independent token, with it's own unique functionalities.
+## Getting Started
 
-### Balance history is registered and available to be queried
+Click the [`Use this template`](https://github.com/vacp2p/foundry-template/generate) button at the top of the page to
+create a new repository with this repo as the initial state.
 
-All MiniMe Tokens maintain a history of the balance changes that occur during each block. Two calls are introduced to read the totalSupply and the balance of any address at any block in the past.
+Or, if you prefer to install the template manually:
 
-    function totalSupplyAt(uint _blockNumber) constant returns(uint)
+```sh
+$ mkdir my-project
+$ cd my-project
+$ forge init --template vacp2p/foundry-template
+$ pnpm install # install Solhint, Prettier, and other Node.js deps
+```
 
-    function balanceOfAt(address _holder, uint _blockNumber) constant returns (uint)
+If this is your first time with Foundry, check out the
+[installation](https://github.com/foundry-rs/foundry#installation) instructions.
 
-### Optional token controller
+## Features
 
-The controller of the contract can generate/destroy/transfer tokens at its own discretion. The controller can be a regular account, but the intention is for the controller to be another contract that imposes transparent rules on the token's issuance and functionality. The Token Controller is not required for the MiniMe token to function, if there is no reason to generate/destroy/transfer tokens, the token controller can be set to 0x0 and this functionality will be disabled.
+This template builds upon the frameworks and libraries mentioned above, so for details about their specific features,
+please consult their respective documentation.
 
-For example, a Token Creation contract can be set as the controller of the MiniMe Token and at the end of the token creation period, the controller can be transferred to the 0x0 address, to guarantee that no new tokens will be created.
+For example, if you're interested in exploring Foundry in more detail, you should look at the
+[Foundry Book](https://book.getfoundry.sh/). In particular, you may be interested in reading the
+[Writing Tests](https://book.getfoundry.sh/forge/writing-tests.html) tutorial.
 
-To create and destroy tokens, these two functions are introduced:
+### Upstream differences
 
-    function generateTokens(address _holder, uint _value) onlyController
+As mentioned above, this template is a fork with adjustments specific to the needs of Vac's smart contract service unit.
+These differences are:
 
-    function destroyTokens(address _holder, uint _value) onlyController
+- **Removal of [PRBTest](https://github.com/PaulRBerg/prb-test)** - In an attempt to keep dependence on third-party code
+  low, we've decided to remove this library as a standard dependency of every project within Vac. If we do see a need
+  for it, we might bring it back in the future.
+- **PROPERTIES.md** - For invariant testing and formal verification, we've introduced a `PROPERTIES.md` to document all
+  protocol properties that must hold true.
 
-### The Token's Controller can freeze transfers.
+### Sensible Defaults
 
-If transfersEnabled == false, tokens cannot be transferred by the users, however they can still be created, destroyed, and transferred by the controller. The controller can also toggle this flag.
+This template comes with a set of sensible default configurations for you to use. These defaults can be found in the
+following files:
 
-    // Allows tokens to be transferred if true or frozen if false
-    function enableTransfers(bool _transfersEnabled) onlyController
+```text
+├── .editorconfig
+├── .gitignore
+├── .prettierignore
+├── .prettierrc.yml
+├── .solhint.json
+├── foundry.toml
+├── remappings.txt
+└── slither.config.json
+```
 
+### VSCode Integration
 
-## Applications
+This template is IDE agnostic, but for the best user experience, you may want to use it in VSCode alongside Nomic
+Foundation's [Solidity extension](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity).
 
-If this token contract is used as the base token, then clones of itself can be easily generated at any given block number, this allows for incredibly powerful functionality, effectively the ability for anyone to give extra features to the token holders without having to migrate to a new contract. Some of the applications that the MiniMe token contract can be used for are:
+For guidance on how to integrate a Foundry project in VSCode, please refer to this
+[guide](https://book.getfoundry.sh/config/vscode).
 
-1. Generating a voting token that is burned when you vote.
-2. Generating a discount "coupon" that is redeemed when you use it.
-3. Generating a token for a "spinoff" DAO.
-4. Generating a token that can be used to give explicit support to an action or a campaign, like polling.
-5. Generating a token to enable the token holders to collect daily, monthly or yearly payments.
-6. Generating a token to limit participation in a token sale or similar event to holders of a specific token.
-7. Generating token that allows a central party complete control to transfer/generate/destroy tokens at will.
-8. Lots of other applications including all the applications the standard ERC 20 token can be used for.
+### GitHub Actions
 
-All these applications and more are enabled by the MiniMe Token Contract. The most amazing part being that anyone that wants to add these features can, in a permissionless yet safe manner without affecting the parent token's intended functionality.
+This template comes with GitHub Actions pre-configured. Your contracts will be linted and tested on every push and pull
+request made to the `main` branch.
 
-# How to deploy a campaign
+You can edit the CI script in [.github/workflows/ci.yml](./.github/workflows/ci.yml).
 
-1. Deploy the MinimeTokenFactory
-2. Deploy the MinimeToken
-3. Deploy the campaign
-4. Assign the controller of the MinimeToken to the campaign.
+## Writing Tests
 
+If you would like to view the logs in the terminal output you can add the `-vvv` flag and use
+[console.log](https://book.getfoundry.sh/faq?highlight=console.log#how-do-i-use-consolelog).
 
+This template comes with an example test contract [Foo.t.sol](./test/Foo.t.sol)
+
+## Usage
+
+This is a list of the most frequently needed commands.
+
+### Build
+
+Build the contracts:
+
+```sh
+$ forge build
+```
+
+### Clean
+
+Delete the build artifacts and cache directories:
+
+```sh
+$ forge clean
+```
+
+### Compile
+
+Compile the contracts:
+
+```sh
+$ forge build
+```
+
+### Coverage
+
+Get a test coverage report:
+
+```sh
+$ forge coverage
+```
+
+### Deploy
+
+Deploy to Anvil:
+
+```sh
+$ forge script script/Deploy.s.sol --broadcast --fork-url http://localhost:8545
+```
+
+For this script to work, you need to have a `MNEMONIC` environment variable set to a valid
+[BIP39 mnemonic](https://iancoleman.io/bip39/).
+
+For instructions on how to deploy to a testnet or mainnet, check out the
+[Solidity Scripting](https://book.getfoundry.sh/tutorials/solidity-scripting.html) tutorial.
+
+### Format
+
+Format the contracts:
+
+```sh
+$ forge fmt
+```
+
+### Gas Usage
+
+Get a gas report:
+
+```sh
+$ forge test --gas-report
+```
+
+### Lint
+
+Lint the contracts:
+
+```sh
+$ pnpm lint
+```
+
+#### Fixing linting issues
+
+For any errors in solidity files, run `forge fmt`. For errors in any other file type, run `pnpm prettier:write`.
+
+### Test
+
+Run the tests:
+
+```sh
+$ forge test
+```
+
+## Notes
+
+1. Foundry uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to manage dependencies. For
+   detailed instructions on working with dependencies, please refer to the
+   [guide](https://book.getfoundry.sh/projects/dependencies.html) in the book
+2. You don't have to create a `.env` file, but filling in the environment variables may be useful when debugging and
+   testing against a fork.
+
+## Related Efforts
+
+- [abigger87/femplate](https://github.com/abigger87/femplate)
+- [cleanunicorn/ethereum-smartcontract-template](https://github.com/cleanunicorn/ethereum-smartcontract-template)
+- [foundry-rs/forge-template](https://github.com/foundry-rs/forge-template)
+- [FrankieIsLost/forge-template](https://github.com/FrankieIsLost/forge-template)
+
+## License
+
+This project is licensed under MIT.

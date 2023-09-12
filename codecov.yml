@@ -1,0 +1,28 @@
+codecov:
+  require_ci_to_pass: false
+comment: false
+ignore:
+  - "script"
+  - "test"
+coverage:
+  status:
+    project:
+      default:
+        # advanced settings
+
+        # Prevents PR from being blocked with a reduction in coverage.
+        # Note, if we want to re-enable this, a `threshold` value can be used
+        # allow coverage to drop by x% while still posting a success status.
+        # `informational`: https://docs.codecov.com/docs/commit-status#informational
+        # `threshold`: https://docs.codecov.com/docs/commit-status#threshold
+        informational: true
+    patch:
+      default:
+        # advanced settings
+
+        # Prevents PR from being blocked with a reduction in coverage.
+        # Note, if we want to re-enable this, a `threshold` value can be used
+        # allow coverage to drop by x% while still posting a success status.
+        # `informational`: https://docs.codecov.com/docs/commit-status#informational
+        # `threshold`: https://docs.codecov.com/docs/commit-status#threshold
+        informational: true
