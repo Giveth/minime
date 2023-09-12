@@ -10,6 +10,12 @@ contract DeploymentConfig is Script {
 
     struct NetworkConfig {
         address deployer;
+        address parentToken;
+        uint256 parentSnapShotBlock;
+        string name;
+        uint8 decimals;
+        string symbol;
+        bool transferEnabled;
     }
 
     NetworkConfig public activeNetworkConfig;
@@ -17,17 +23,25 @@ contract DeploymentConfig is Script {
     address private deployer;
 
     constructor(address _broadcaster) {
+        deployer = _broadcaster;
         if (block.chainid == 31_337) {
             activeNetworkConfig = getOrCreateAnvilEthConfig();
         } else {
             revert DeploymentConfig_NoConfigForChain(block.chainid);
         }
         if (_broadcaster == address(0)) revert DeploymentConfig_InvalidDeployerAddress();
-        deployer = _broadcaster;
     }
 
     function getOrCreateAnvilEthConfig() public view returns (NetworkConfig memory) {
-        return NetworkConfig({ deployer: deployer });
+        return NetworkConfig({
+            deployer: deployer,
+            parentToken: address(0),
+            parentSnapShotBlock: 0,
+            name: "MiniMe Test Token",
+            decimals: 18,
+            symbol: "MMT",
+            transferEnabled: true
+        });
     }
 
     // This function is a hack to have it excluded by `forge coverage` until

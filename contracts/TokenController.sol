@@ -6,7 +6,7 @@ abstract contract TokenController {
     /// @notice Called when `_owner` sends ether to the MiniMe Token contract
     /// @param _owner The address that sent the ether to create tokens
     /// @return True if the ether is accepted, false if it throws
-    function proxyPayment(address _owner) virtual public payable returns(bool);
+    function proxyPayment(address _owner) public payable virtual returns (bool);
 
     /// @notice Notifies the controller about a token transfer allowing the
     ///  controller to react if desired
@@ -14,7 +14,7 @@ abstract contract TokenController {
     /// @param _to The destination of the transfer
     /// @param _amount The amount of the transfer
     /// @return False if the controller does not authorize the transfer
-    function onTransfer(address _from, address _to, uint _amount) virtual public returns(bool);
+    function onTransfer(address _from, address _to, uint256 _amount) public virtual returns (bool);
 
     /// @notice Notifies the controller about an approval allowing the
     ///  controller to react if desired
@@ -22,6 +22,5 @@ abstract contract TokenController {
     /// @param _spender The spender in the `approve()` call
     /// @param _amount The amount in the `approve()` call
     /// @return False if the controller does not authorize the approval
-    function onApprove(address _owner, address _spender, uint _amount) virtual public
-        returns(bool);
+    function onApprove(address _owner, address _spender, uint256 _amount) public virtual returns (bool);
 }
