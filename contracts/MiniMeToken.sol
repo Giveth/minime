@@ -26,8 +26,8 @@ pragma solidity ^0.8.0;
 ///  affecting the original token
 /// @dev It is ERC20 compliant, but still needs to under go further testing.
 
-import "./Controlled.sol";
-import "./TokenController.sol";
+import { Controlled } from "./Controlled.sol";
+import { TokenController } from "./TokenController.sol";
 
 abstract contract ApproveAndCallFallBack {
     function receiveApproval(address from, uint256 _amount, address _token, bytes memory _data) public virtual;
@@ -66,13 +66,13 @@ contract MiniMeToken is Controlled {
     // `balances` is the map that tracks the balance of each address, in this
     //  contract when the balance changes the block number that the change
     //  occurred is also included in the map
-    mapping(address => Checkpoint[]) balances;
+    mapping(address account => Checkpoint[] history) private balances;
 
     // `allowed` tracks any extra transfer rights as in all ERC20 tokens
-    mapping(address => mapping(address => uint256)) allowed;
+    mapping(address account => mapping(address authorized => uint256 amount) allowance) private allowed;
 
     // Tracks the history of the `totalSupply` of the token
-    Checkpoint[] totalSupplyHistory;
+    Checkpoint[] private totalSupplyHistory;
 
     // Flag that determines if the token is transferable or not.
     bool public transfersEnabled;
@@ -125,7 +125,7 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be transferred
     /// @return success Whether the transfer was successful or not
     function transfer(address _to, uint256 _amount) public returns (bool success) {
-        require(transfersEnabled);
+        require(transfersEnabled, "Transfers are not enabled");
         doTransfer(msg.sender, _to, _amount);
         return true;
     }
@@ -142,10 +142,10 @@ contract MiniMeToken is Controlled {
         //  controller of this contract, which in most situations should be
         //  another open source smart contract or 0x0
         if (msg.sender != controller) {
-            require(transfersEnabled);
+            require(transfersEnabled, "Transfers are not enabled");
 
             // The standard ERC 20 transferFrom functionality
-            require(allowed[_from][msg.sender] >= _amount);
+            require(allowed[_from][msg.sender] >= _amount, "Not enough allowed balance");
             allowed[_from][msg.sender] -= _amount;
         }
         doTransfer(_from, _to, _amount);
@@ -163,20 +163,20 @@ contract MiniMeToken is Controlled {
             return;
         }
 
-        require(parentSnapShotBlock < block.number);
+        require(parentSnapShotBlock < block.number, "Parent snapshot not reached");
 
         // Do not allow transfer to 0x0 or the token contract itself
-        require((_to != address(0)) && (_to != address(this)));
+        require((_to != address(0)) && (_to != address(this)), "Invalid destination");
 
         // If the amount being transfered is more than the balance of the
         //  account the transfer throws
         uint256 previousBalanceFrom = balanceOfAt(_from, block.number);
 
-        require(previousBalanceFrom >= _amount);
+        require(previousBalanceFrom >= _amount, "Not enough balance");
 
         // Alerts the token controller of the transfer
         if (isContract(controller)) {
-            require(TokenController(controller).onTransfer(_from, _to, _amount));
+            require(TokenController(controller).onTransfer(_from, _to, _amount), "Controller rejected transfer");
         }
 
         // First update the balance array with the new value for the address
@@ -186,7 +186,7 @@ contract MiniMeToken is Controlled {
         // Then update the balance array with the new value for the address
         //  receiving the tokens
         uint256 previousBalanceTo = balanceOfAt(_to, block.number);
-        require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
+        require(previousBalanceTo + _amount >= previousBalanceTo, "Balance overflow"); // Check for overflow
         updateValueAtNow(balances[_to], previousBalanceTo + _amount);
 
         // An event to make the transfer easy to find on the blockchain
@@ -206,17 +206,19 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return success True if the approval was successful
     function approve(address _spender, uint256 _amount) public returns (bool success) {
-        require(transfersEnabled);
+        require(transfersEnabled, "Transfers are not enabled");
 
         // To change the approve amount you first have to reduce the addresses`
         //  allowance to zero by calling `approve(_spender,0)` if it is not
         //  already 0 to mitigate the race condition described here:
         //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-        require((_amount == 0) || (allowed[msg.sender][_spender] == 0));
+        require((_amount == 0) || (allowed[msg.sender][_spender] == 0), "First reset allowance");
 
         // Alerts the token controller of the approve function call
         if (isContract(controller)) {
-            require(TokenController(controller).onApprove(msg.sender, _spender, _amount));
+            require(
+                TokenController(controller).onApprove(msg.sender, _spender, _amount), "Controller rejected allowance"
+            );
         }
 
         allowed[msg.sender][_spender] = _amount;
@@ -241,7 +243,7 @@ contract MiniMeToken is Controlled {
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return success True if the function call was successful
     function approveAndCall(address _spender, uint256 _amount, bytes memory _extraData) public returns (bool success) {
-        require(approve(_spender, _amount));
+        require(approve(_spender, _amount), "Approve failed");
 
         ApproveAndCallFallBack(_spender).receiveApproval(msg.sender, _amount, address(this), _extraData);
 
@@ -350,9 +352,9 @@ contract MiniMeToken is Controlled {
     /// @return True if the tokens are generated correctly
     function generateTokens(address _owner, uint256 _amount) public onlyController returns (bool) {
         uint256 curTotalSupply = totalSupply();
-        require(curTotalSupply + _amount >= curTotalSupply, "OVERFLOW"); // Check for overflow
+        require(curTotalSupply + _amount >= curTotalSupply, "Total supply overflow"); // Check for overflow
         uint256 previousBalanceTo = balanceOf(_owner);
-        require(previousBalanceTo + _amount >= previousBalanceTo, "OVERFLOW 2"); // Check for overflow
+        require(previousBalanceTo + _amount >= previousBalanceTo, "Balance overflow"); // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
         emit Transfer(address(0), _owner, _amount);
@@ -365,9 +367,9 @@ contract MiniMeToken is Controlled {
     /// @return True if the tokens are burned correctly
     function destroyTokens(address _owner, uint256 _amount) public onlyController returns (bool) {
         uint256 curTotalSupply = totalSupply();
-        require(curTotalSupply >= _amount);
+        require(curTotalSupply >= _amount, "Not enough supply");
         uint256 previousBalanceFrom = balanceOf(_owner);
-        require(previousBalanceFrom >= _amount);
+        require(previousBalanceFrom >= _amount, "Not enough balance");
         updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
         updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
         emit Transfer(_owner, address(0), _amount);
@@ -402,17 +404,17 @@ contract MiniMeToken is Controlled {
         if (_block < checkpoints[0].fromBlock) return 0;
 
         // Binary search of the value in the array
-        uint256 min = 0;
+        uint256 sMin = 0;
         uint256 max = checkpoints.length - 1;
-        while (max > min) {
-            uint256 mid = (max + min + 1) / 2;
+        while (max > sMin) {
+            uint256 mid = (max + sMin + 1) / 2;
             if (checkpoints[mid].fromBlock <= _block) {
-                min = mid;
+                sMin = mid;
             } else {
                 max = mid - 1;
             }
         }
-        return checkpoints[min].value;
+        return checkpoints[sMin].value;
     }
 
     /// @dev `updateValueAtNow` used to update the `balances` map and the
@@ -436,6 +438,7 @@ contract MiniMeToken is Controlled {
     function isContract(address _addr) internal view returns (bool) {
         uint256 size;
         if (_addr == address(0)) return false;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             size := extcodesize(_addr)
         }
@@ -451,8 +454,8 @@ contract MiniMeToken is Controlled {
     ///  set to 0, then the `proxyPayment` method is called which relays the
     ///  ether and creates tokens as described in the token controller contract
     receive() external payable {
-        require(isContract(controller));
-        require(TokenController(controller).proxyPayment{ value: msg.value }(msg.sender));
+        require(isContract(controller), "Controller not set");
+        require(TokenController(controller).proxyPayment{ value: msg.value }(msg.sender), "Controller rejected payment");
     }
 
     //////////
