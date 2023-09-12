@@ -25,7 +25,8 @@ pragma solidity ^0.8.0;
 ///  funds for non-profit causes, but it can be customized for any variety of
 ///  purposes.
 
-import "./MiniMeToken.sol";
+import { MiniMeToken } from "./MiniMeToken.sol";
+import { TokenController } from "./TokenController.sol";
 
 /// @dev `Owned` is a base level contract that assigns an `owner` that can be
 ///  later changed
@@ -33,7 +34,7 @@ contract Owned {
     /// @dev `owner` is the only address that can call a function with this
     /// modifier
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "Not authorized");
         _;
     }
 
@@ -86,7 +87,8 @@ contract Campaign is TokenController, Owned {
         require(
             (_endFundingTime >= block.timestamp) // Cannot end in the past
                 && (_endFundingTime > _startFundingTime) && (_maximumFunding <= 10_000 ether) // The Beta is limited
-                && (_vaultAddress != address(0))
+                && (_vaultAddress != address(0)),
+            "Invalid parameters"
         ); // To prevent burning ETH
         startFundingTime = _startFundingTime;
         endFundingTime = _endFundingTime;
@@ -119,21 +121,15 @@ contract Campaign is TokenController, Owned {
 
     /// @notice Notifies the controller about a transfer, for this Campaign all
     ///  transfers are allowed by default and no extra notifications are needed
-    /// @param _from The origin of the transfer
-    /// @param _to The destination of the transfer
-    /// @param _amount The amount of the transfer
     /// @return False if the controller does not authorize the transfer
-    function onTransfer(address _from, address _to, uint256 _amount) public override returns (bool) {
+    function onTransfer(address, address, uint256) public pure override returns (bool) {
         return true;
     }
 
     /// @notice Notifies the controller about an approval, for this Campaign all
     ///  approvals are allowed by default and no extra notifications are needed
-    /// @param _owner The address that calls `approve()`
-    /// @param _spender The spender in the `approve()` call
-    /// @param _amount The amount in the `approve()` call
     /// @return False if the controller does not authorize the approval
-    function onApprove(address _owner, address _spender, uint256 _amount) public override returns (bool) {
+    function onApprove(address, address, uint256) public pure override returns (bool) {
         return true;
     }
 
@@ -147,18 +143,19 @@ contract Campaign is TokenController, Owned {
         require(
             (block.timestamp >= startFundingTime) && (block.timestamp <= endFundingTime)
                 && (tokenContract.controller() != address(0)) // Extra check
-                && (msg.value != 0) && (totalCollected + msg.value <= maximumFunding)
+                && (msg.value != 0) && (totalCollected + msg.value <= maximumFunding),
+            "Payment rejected"
         );
 
         //Track how much the Campaign has collected
         totalCollected += msg.value;
 
         //Send the ether to the vault
-        require(vaultAddress.send(msg.value));
+        require(vaultAddress.send(msg.value), "Vault transfer failed");
 
         // Creates an equal amount of tokens as ether sent. The new tokens are created
         //  in the `_owner` address
-        require(tokenContract.generateTokens(_owner, msg.value));
+        require(tokenContract.generateTokens(_owner, msg.value), "Token mint failed");
 
         return;
     }
@@ -169,7 +166,7 @@ contract Campaign is TokenController, Owned {
     /// @dev `finalizeFunding()` can only be called after the end of the funding period.
 
     function finalizeFunding() external {
-        require(block.timestamp >= endFundingTime);
+        require(block.timestamp >= endFundingTime, "Funding period not over");
         tokenContract.changeController(payable(address(0)));
     }
 
