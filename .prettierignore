@@ -1,5 +1,7 @@
 # directories
+broadcast
 cache
+lib
 node_modules
 out
 
@@ -9,9 +11,8 @@ out
 .DS_Store
 .pnp.*
 lcov.info
+package-lock.json
+pnpm-lock.yaml
 yarn.lock
 
-# broadcasts
-!broadcast
-broadcast/*
-broadcast/*/31337/
+slither.config.json

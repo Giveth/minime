@@ -1,51 +1,30 @@
 {
-  "name": "minimetoken",
-  "version": "0.2.0",
-  "description": "MiniMe contract",
-  "main": "dist/minimetoken.js",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "build": "solcpiler",
-    "test": "solcpiler; mocha --harmony"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Giveth/minime.git"
-  },
-  "keywords": [
-    "dao",
-    "solidity",
-    "token",
-    "charity",
-    "smart",
-    "contract",
-    "minime",
-    "giveth",
-    "ethereum"
-  ],
-  "author": "Jordi Baylina",
-  "license": "GPL-3.0",
-  "bugs": {
-    "url": "https://github.com/Giveth/minimi/issues"
-  },
-  "homepage": "https://github.com/Giveth/minime",
-  "dependencies": {
-    "eth-contract-class": "0.0.6"
+  "name": "@vacp2p/foundry-template",
+  "description": "Foundry-based template for developing Solidity smart contracts used by Vac",
+  "version": "1.0.0",
+  "author": {
+    "name": "0x-r4bbit",
+    "url": "https://github.com/vacp2p"
   },
   "devDependencies": {
-    "babel-eslint": "^7.2.3",
-    "eslint-config-airbnb": "^15.0.1",
-    "eslint-plugin-import": "^2.6.0",
-    "eslint-plugin-jsx-a11y": "^6.0.2",
-    "eslint-plugin-react": "^7.1.0",
-    "ethereumjs-testrpc": "git://github.com/perissology/testrpc.git#81216dbc",
-    "lerna": "^2.2.0",
-    "random-bytes": "^1.0.0",
-    "mocha": "^3.5.0",
-    "solcpiler": "0.0.6",
-    "web3": "git://github.com/perissology/web3.js.git#all_fixes",
-    "chai": "^4.1.0"
+    "prettier": "^3.0.0",
+    "solhint-community": "^3.6.0"
+  },
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "forge",
+    "foundry",
+    "smart-contracts",
+    "solidity",
+    "template"
+  ],
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf cache out",
+    "lint": "pnpm lint:sol && pnpm prettier:check",
+    "lint:sol": "forge fmt --check && pnpm solhint {script,src,test}/**/*.sol",
+    "prettier:check": "prettier --check **/*.{json,md,yml} --ignore-path=.prettierignore",
+    "prettier:write": "prettier --write **/*.{json,md,yml} --ignore-path=.prettierignore"
   }
 }
