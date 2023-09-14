@@ -25,8 +25,9 @@ pragma solidity ^0.8.0;
 ///  funds for non-profit causes, but it can be customized for any variety of
 ///  purposes.
 
-import { MiniMeToken } from "./MiniMeToken.sol";
-import { TokenController } from "./TokenController.sol";
+import { MiniMeToken } from "../MiniMeToken.sol";
+import { TokenController } from "../TokenController.sol";
+import { Owned } from "./Owned.sol";
 
 error NotAuthorized();
 error InvalidParameters();
@@ -34,31 +35,6 @@ error PaymentRejected();
 error TransferFailed(address destination);
 error TokenMintFailed();
 error FundingPeriodNotOver();
-
-/// @dev `Owned` is a base level contract that assigns an `owner` that can be
-///  later changed
-contract Owned {
-    /// @dev `owner` is the only address that can call a function with this
-    /// modifier
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert NotAuthorized();
-        _;
-    }
-
-    address public owner;
-
-    /// @notice The Constructor assigns the message sender to be `owner`
-    constructor() {
-        owner = msg.sender;
-    }
-
-    /// @notice `owner` can step down and assign some other address to this role
-    /// @param _newOwner The address of the new owner. 0x0 can be used to create
-    ///  an ublock.timestampned neutral vault, however that cannot be undone
-    function changeOwner(address _newOwner) public onlyOwner {
-        owner = _newOwner;
-    }
-}
 
 /// @dev This is designed to control the issuance of a MiniMe Token for a
 ///  non-profit Campaign. This contract effectively dictates the terms of the
