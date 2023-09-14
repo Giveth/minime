@@ -39,6 +39,7 @@ error ControllerNotSet();
 
 import { Controlled } from "./Controlled.sol";
 import { TokenController } from "./TokenController.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 abstract contract ApproveAndCallFallBack {
     function receiveApproval(address from, uint256 _amount, address _token, bytes memory _data) public virtual;
@@ -47,7 +48,7 @@ abstract contract ApproveAndCallFallBack {
 /// @dev The actual token contract, the default controller is the msg.sender
 ///  that deploys the contract, so usually this token will be deployed by a
 ///  token controller contract, which Giveth will call a "Campaign"
-contract MiniMeToken is Controlled {
+contract MiniMeToken is Controlled, IERC20 {
     string public name; //The Token's name: e.g. DigixDAO Tokens
     uint8 public decimals; //Number of decimals of the smallest unit
     string public symbol; //An identifier: e.g. REP
@@ -481,14 +482,13 @@ contract MiniMeToken is Controlled {
     ///  sent tokens to this contract.
     /// @param _token The address of the token contract that you want to recover
     ///  set to 0 in case you want to extract ether.
-    function claimTokens(MiniMeToken _token) public onlyController {
-        //TODO: change is to generic ERC20 interface
+    function claimTokens(IERC20 _token) public onlyController {
         if (address(_token) == address(0)) {
             controller.transfer(address(this).balance);
             return;
         }
 
-        MiniMeToken token = _token;
+        IERC20 token = _token;
         uint256 balance = token.balanceOf(address(this));
         token.transfer(controller, balance);
         emit ClaimedTokens(address(_token), controller, balance);
@@ -498,9 +498,7 @@ contract MiniMeToken is Controlled {
     // Events
     ////////////////
     event ClaimedTokens(address indexed _token, address indexed _controller, uint256 _amount);
-    event Transfer(address indexed _from, address indexed _to, uint256 _amount);
     event NewCloneToken(address indexed _cloneToken, uint256 _snapshotBlock);
-    event Approval(address indexed _owner, address indexed _spender, uint256 _amount);
 }
 
 ////////////////
