@@ -48,9 +48,9 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 ///  token controller contract, which Giveth will call a "Campaign"
 contract MiniMeToken is Controlled, IERC20 {
     string public name; //The Token's name: e.g. DigixDAO Tokens
-    uint8 public decimals; //Number of decimals of the smallest unit
+    uint8 public immutable decimals; //Number of decimals of the smallest unit
     string public symbol; //An identifier: e.g. REP
-    string public version = "MMT_0.2"; //An arbitrary versioning scheme
+    string public constant TOKEN_VERSION = "MMT_0.2"; //An arbitrary versioning scheme
 
     /// @dev `Checkpoint` is the structure that attaches a block number to a
     ///  given value, the block number attached is the one that last changed the
@@ -64,14 +64,14 @@ contract MiniMeToken is Controlled, IERC20 {
 
     // `parentToken` is the Token address that was cloned to produce this token;
     //  it will be 0x0 for a token that was not cloned
-    MiniMeToken public parentToken;
+    MiniMeToken public immutable parentToken;
 
     // `parentSnapShotBlock` is the block number from the Parent Token that was
     //  used to determine the initial distribution of the Clone Token
-    uint256 public parentSnapShotBlock;
+    uint256 public immutable parentSnapShotBlock;
 
     // `creationBlock` is the block number that the Clone Token was created
-    uint256 public creationBlock;
+    uint256 public immutable creationBlock;
 
     // `balances` is the map that tracks the balance of each address, in this
     //  contract when the balance changes the block number that the change
@@ -88,7 +88,7 @@ contract MiniMeToken is Controlled, IERC20 {
     bool public transfersEnabled;
 
     // The factory used to create new clone tokens
-    MiniMeTokenFactory public tokenFactory;
+    MiniMeTokenFactory public immutable tokenFactory;
 
     ////////////////
     // Constructor
