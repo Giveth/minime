@@ -7,7 +7,7 @@
   cbor_metadata = false
   evm_version = "paris"
   fuzz = { runs = 1_000 }
-  gas_reports = ["*"]
+  gas_reports = ["MiniMeToken", "MiniMeTokenFactory"]
   libs = ["lib"]
   optimizer = true
   optimizer_runs = 10_000

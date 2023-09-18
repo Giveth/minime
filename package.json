@@ -21,6 +21,7 @@
   ],
   "private": true,
   "scripts": {
+    "gas-report": "forge test --gas-report | awk '/Test result:/ {found=1; buffer=\"\"; next} found && !/Ran/ {buffer=buffer $0 ORS} /Ran/ {found=0} END {printf \"%s\", buffer}' > .gas-report",
     "clean": "rm -rf cache out",
     "lint": "pnpm lint:sol && pnpm prettier:check",
     "lint:sol": "forge fmt --check && pnpm solhint {script,src,test}/**/*.sol",
