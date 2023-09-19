@@ -1,6 +1,13 @@
 ![MiniMe Token](readme-header.png)
 
-[![Build Status](https://travis-ci.org/Giveth/minime.svg?branch=master)](https://travis-ci.org/Giveth/minime)
+[![Github Actions][gha-badge]][gha] [![Codecov][codecov-badge]][codecov] [![Foundry][foundry-badge]][foundry]
+
+[gha]: https://github.com/vacp2p/minime/actions
+[gha-badge]: https://github.com/vacp2p/minime/actions/workflows/ci.yml/badge.svg
+[codecov]: https://codecov.io/gh/vacp2p/minime
+[codecov-badge]: https://codecov.io/gh/vacp2p/minime/graph/badge.svg
+[foundry]: https://getfoundry.sh/
+[foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 
 The MiniMeToken contract is a standard ERC20 token with extra functionality:
 
