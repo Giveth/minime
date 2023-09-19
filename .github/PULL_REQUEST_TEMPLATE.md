@@ -9,4 +9,4 @@ Ensure you completed **all of the steps** below before submitting your pull requ
 - [ ] Added natspec comments?
 - [ ] Ran `forge snapshot`?
 - [ ] Ran `pnpm lint`?
-- [ ] Ran `forge test`?
+- [ ] Ran `pnpm gas-report`?
