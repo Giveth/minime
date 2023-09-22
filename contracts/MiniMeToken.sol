@@ -94,4 +94,5 @@ contract MiniMeToken is MiniMeBase {
         emit NewCloneToken(address(cloneToken), _snapshotBlock);
         return address(cloneToken);
     }
+    event NewCloneToken(address indexed _cloneToken, uint256 _snapshotBlock);
 }

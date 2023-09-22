@@ -442,5 +442,4 @@ abstract contract MiniMeBase is Controlled, IERC20 {
     // Events
     ////////////////
     event ClaimedTokens(address indexed _token, address indexed _controller, uint256 _amount);
-    event NewCloneToken(address indexed _cloneToken, uint256 _snapshotBlock);
 }
