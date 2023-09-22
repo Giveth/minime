@@ -184,13 +184,6 @@ contract MiniMeToken is Controlled, IERC20 {
 
         if (previousBalanceFrom < _amount) revert NotEnoughBalance();
 
-        // Alerts the token controller of the transfer
-        if (isContract(controller)) {
-            if (!TokenController(controller).onTransfer(_from, _to, _amount)) {
-                revert ControllerRejected();
-            }
-        }
-
         // First update the balance array with the new value for the address
         //  sending the tokens
         updateValueAtNow(balances[_from], previousBalanceFrom - _amount);
@@ -200,6 +193,13 @@ contract MiniMeToken is Controlled, IERC20 {
         uint256 previousBalanceTo = balanceOfAt(_to, block.number);
         if (previousBalanceTo + _amount < previousBalanceTo) revert Overflow(); // Check for overflow
         updateValueAtNow(balances[_to], previousBalanceTo + _amount);
+
+        // Alerts the token controller of the transfer
+        if (isContract(controller)) {
+            if (!TokenController(controller).onTransfer(_from, _to, _amount)) {
+                revert ControllerRejected();
+            }
+        }
 
         // An event to make the transfer easy to find on the blockchain
         emit Transfer(_from, _to, _amount);
