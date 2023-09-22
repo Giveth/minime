@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import "./MiniMeToken.sol";
+import { MiniMeToken } from "./MiniMeToken.sol";
 
 /// @title MiniMeToken Factory Contract
 /// @dev This contract is used to generate clone contracts from a contract.

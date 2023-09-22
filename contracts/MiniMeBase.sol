@@ -29,24 +29,18 @@ error ControllerNotSet();
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/// @title MiniMeToken Contract
+import { Controlled } from "./Controlled.sol";
+import { TokenController } from "./TokenController.sol";
+import { ApproveAndCallFallBack } from "./ApproveAndCallFallBack.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+/// @title MiniMeBase Contract
 /// @author Jordi Baylina
 /// @dev This token contract's goal is to make it easy for anyone to clone this
 ///  token using the token distribution at a given block, this will allow DAO's
 ///  and DApps to upgrade their features in a decentralized manner without
 ///  affecting the original token
-/// @dev It is ERC20 compliant, but still needs to under go further testing.
-
-import { Controlled } from "./Controlled.sol";
-import { TokenController } from "./TokenController.sol";
-import { ApproveAndCallFallBack } from "./ApproveAndCallFallBack.sol";
-import { MiniMeTokenFactory } from "./MiniMeTokenFactory.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-/// @dev The actual token contract, the default controller is the msg.sender
-///  that deploys the contract, so usually this token will be deployed by a
-///  token controller contract, which Giveth will call a "Campaign"
-contract MiniMeToken is Controlled, IERC20 {
+abstract contract MiniMeBase is Controlled, IERC20 {
     string public name; //The Token's name: e.g. DigixDAO Tokens
     uint8 public immutable decimals; //Number of decimals of the smallest unit
     string public symbol; //An identifier: e.g. REP
@@ -64,7 +58,7 @@ contract MiniMeToken is Controlled, IERC20 {
 
     // `parentToken` is the Token address that was cloned to produce this token;
     //  it will be 0x0 for a token that was not cloned
-    MiniMeToken public immutable parentToken;
+    MiniMeBase public immutable parentToken;
 
     // `parentSnapShotBlock` is the block number from the Parent Token that was
     //  used to determine the initial distribution of the Clone Token
@@ -87,17 +81,7 @@ contract MiniMeToken is Controlled, IERC20 {
     // Flag that determines if the token is transferable or not.
     bool public transfersEnabled;
 
-    // The factory used to create new clone tokens
-    MiniMeTokenFactory public immutable tokenFactory;
-
-    ////////////////
-    // Constructor
-    ////////////////
-
-    /// @notice Constructor to create a MiniMeToken
-    /// @param _tokenFactory The address of the MiniMeTokenFactory contract that
-    ///  will create the Clone token contracts, the token factory needs to be
-    ///  deployed first
+    /// @notice Constructor to create a MiniMeBase
     /// @param _parentToken Address of the parent token, set to 0x0 if it is a
     ///  new token
     /// @param _parentSnapShotBlock Block of the parent token that will
@@ -108,15 +92,13 @@ contract MiniMeToken is Controlled, IERC20 {
     /// @param _tokenSymbol Token Symbol for the new token
     /// @param _transfersEnabled If true, tokens will be able to be transferred
     constructor(
-        MiniMeTokenFactory _tokenFactory,
-        MiniMeToken _parentToken,
+        MiniMeBase _parentToken,
         uint256 _parentSnapShotBlock,
         string memory _tokenName,
         uint8 _decimalUnits,
         string memory _tokenSymbol,
         bool _transfersEnabled
     ) {
-        tokenFactory = _tokenFactory;
         name = _tokenName; // Set the name
         decimals = _decimalUnits; // Set the decimals
         symbol = _tokenSymbol; // Set the symbol
@@ -319,42 +301,6 @@ contract MiniMeToken is Controlled, IERC20 {
     }
 
     ////////////////
-    // Clone Token Method
-    ////////////////
-
-    /// @notice Creates a new clone token with the initial distribution being
-    ///  this token at `_snapshotBlock`
-    /// @param _cloneTokenName Name of the clone token
-    /// @param _cloneDecimalUnits Number of decimals of the smallest unit
-    /// @param _cloneTokenSymbol Symbol of the clone token
-    /// @param _snapshotBlock Block when the distribution of the parent token is
-    ///  copied to set the initial distribution of the new clone token;
-    ///  if the block is zero than the actual block, the current block is used
-    /// @param _transfersEnabled True if transfers are allowed in the clone
-    /// @return The address of the new MiniMeToken Contract
-    function createCloneToken(
-        string memory _cloneTokenName,
-        uint8 _cloneDecimalUnits,
-        string memory _cloneTokenSymbol,
-        uint256 _snapshotBlock,
-        bool _transfersEnabled
-    )
-        public
-        returns (address)
-    {
-        if (_snapshotBlock == 0) _snapshotBlock = block.number;
-        MiniMeToken cloneToken = tokenFactory.createCloneToken(
-            this, _snapshotBlock, _cloneTokenName, _cloneDecimalUnits, _cloneTokenSymbol, _transfersEnabled
-        );
-
-        cloneToken.changeController(payable(msg.sender));
-
-        // An event to make the token easy to find on the blockchain
-        emit NewCloneToken(address(cloneToken), _snapshotBlock);
-        return address(cloneToken);
-    }
-
-    ////////////////
     // Generate and destroy tokens
     ////////////////
 
@@ -362,7 +308,7 @@ contract MiniMeToken is Controlled, IERC20 {
     /// @param _owner The address that will be assigned the new tokens
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
-    function generateTokens(address _owner, uint256 _amount) public onlyController returns (bool) {
+    function mint(address _owner, uint256 _amount) internal returns (bool) {
         uint256 curTotalSupply = totalSupply();
         if (curTotalSupply + _amount < curTotalSupply) revert Overflow(); // Check for overflow
         uint256 previousBalanceTo = balanceOf(_owner);
@@ -377,7 +323,7 @@ contract MiniMeToken is Controlled, IERC20 {
     /// @param _owner The address that will lose the tokens
     /// @param _amount The quantity of tokens to burn
     /// @return True if the tokens are burned correctly
-    function destroyTokens(address _owner, uint256 _amount) public onlyController returns (bool) {
+    function burn(address _owner, uint256 _amount) internal returns (bool) {
         uint256 curTotalSupply = totalSupply();
         if (curTotalSupply < _amount) revert NotEnoughSupply();
         uint256 previousBalanceFrom = balanceOf(_owner);
@@ -496,5 +442,4 @@ contract MiniMeToken is Controlled, IERC20 {
     // Events
     ////////////////
     event ClaimedTokens(address indexed _token, address indexed _controller, uint256 _amount);
-    event NewCloneToken(address indexed _cloneToken, uint256 _snapshotBlock);
 }
