@@ -173,7 +173,7 @@ abstract contract MiniMeBase is Controlled, IERC20 {
         // Then update the balance array with the new value for the address
         //  receiving the tokens
         uint256 previousBalanceTo = balanceOfAt(_to, block.number);
-        if (previousBalanceTo + _amount < previousBalanceTo) revert Overflow(); // Check for overflow
+        if (uint128(previousBalanceTo + _amount) < previousBalanceTo) revert Overflow(); // Check for overflow
         updateValueAtNow(balances[_to], previousBalanceTo + _amount);
 
         // Alerts the token controller of the transfer
@@ -310,9 +310,9 @@ abstract contract MiniMeBase is Controlled, IERC20 {
     /// @return True if the tokens are generated correctly
     function mint(address _owner, uint256 _amount) internal returns (bool) {
         uint256 curTotalSupply = totalSupply();
-        if (curTotalSupply + _amount < curTotalSupply) revert Overflow(); // Check for overflow
+        if (uint128(curTotalSupply + _amount) < curTotalSupply) revert Overflow(); // Check for overflow
         uint256 previousBalanceTo = balanceOf(_owner);
-        if (previousBalanceTo + _amount < previousBalanceTo) revert Overflow(); // Check for overflow
+        if (uint128(previousBalanceTo + _amount) < previousBalanceTo) revert Overflow(); // Check for overflow
         updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
         updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
         emit Transfer(address(0), _owner, _amount);
