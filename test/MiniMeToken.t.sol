@@ -150,10 +150,15 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
         MiniMeTokenTest.setUp();
     }
 
-    function _createClone() internal returns (MiniMeToken) {
-        address cloneAddress = minimeToken.createCloneToken("Clone Token 1", 18, "MMTc", 0, true);
-        MiniMeToken clone = MiniMeToken(payable(cloneAddress));
-        return clone;
+    function _createClone() internal returns (MiniMeToken clone) {
+        return new MiniMeToken(
+          minimeTokenFactory, 
+          minimeToken, 
+          block.number, 
+          "Clone Token 1",
+          18,
+          "MMTc",
+          true);
     }
 
     function testCreateCloneToken() public {
