@@ -1,37 +1,37 @@
 | contracts/MiniMeToken.sol:MiniMeToken contract |                 |        |        |         |         |
 |------------------------------------------------|-----------------|--------|--------|---------|---------|
 | Deployment Cost                                | Deployment Size |        |        |         |         |
-| 1793495                                        | 9955            |        |        |         |         |
+| 1804309                                        | 10009           |        |        |         |         |
 | Function Name                                  | min             | avg    | median | max     | # calls |
 | allowance                                      | 0               | 62     | 0      | 808     | 13      |
 | approve                                        | 0               | 15018  | 14715  | 31708   | 10      |
-| approveAndCall                                 | 0               | 31199  | 0      | 93597   | 3       |
+| approveAndCall                                 | 0               | 31201  | 0      | 93603   | 3       |
 | balanceOf                                      | 0               | 285    | 0      | 2753    | 51      |
 | balanceOfAt                                    | 0               | 90     | 0      | 2363    | 26      |
 | changeController                               | 0               | 634    | 0      | 3558    | 8       |
-| claimTokens                                    | 9537            | 41277  | 57148  | 57148   | 3       |
+| claimTokens                                    | 9537            | 41281  | 57154  | 57154   | 3       |
 | controller                                     | 0               | 0      | 0      | 0       | 7       |
-| createCloneToken                               | 0               | 919122 | 919122 | 1838245 | 2       |
+| createCloneToken                               | 0               | 924533 | 924533 | 1849066 | 2       |
 | decimals                                       | 0               | 0      | 0      | 0       | 7       |
 | destroyTokens                                  | 2308            | 5206   | 4310   | 9001    | 3       |
 | enableTransfers                                | 0               | 0      | 0      | 0       | 3       |
-| generateTokens                                 | 0               | 7561   | 0      | 95796   | 38      |
+| generateTokens                                 | 0               | 7184   | 0      | 95808   | 40      |
 | name                                           | 0               | 0      | 0      | 0       | 7       |
 | parentSnapShotBlock                            | 0               | 0      | 0      | 0       | 8       |
 | parentToken                                    | 0               | 0      | 0      | 0       | 8       |
 | symbol                                         | 0               | 0      | 0      | 0       | 7       |
 | totalSupply                                    | 0               | 212    | 0      | 1911    | 9       |
 | totalSupplyAt                                  | 0               | 285    | 0      | 1995    | 7       |
-| transfer                                       | 526             | 38438  | 50389  | 75187   | 18      |
-| transferFrom                                   | 0               | 16836  | 3495   | 66590   | 7       |
+| transfer                                       | 526             | 38443  | 50395  | 75193   | 18      |
+| transferFrom                                   | 0               | 16837  | 3495   | 66596   | 7       |
 
 
 | contracts/MiniMeTokenFactory.sol:MiniMeTokenFactory contract |                 |        |        |         |         |
 |--------------------------------------------------------------|-----------------|--------|--------|---------|---------|
 | Deployment Cost                                              | Deployment Size |        |        |         |         |
-| 2118450                                                      | 10613           |        |        |         |         |
+| 2129265                                                      | 10667           |        |        |         |         |
 | Function Name                                                | min             | avg    | median | max     | # calls |
-| createCloneToken                                             | 0               | 915333 | 915333 | 1830667 | 2       |
+| createCloneToken                                             | 0               | 920744 | 920744 | 1841488 | 2       |
 
 
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import { Test } from "forge-std/Test.sol";
+import { Test, console } from "forge-std/Test.sol";
 import { Deploy } from "../script/Deploy.s.sol";
 import { DeploymentConfig } from "../script/DeploymentConfig.s.sol";
 
@@ -15,6 +15,7 @@ import {
     NotEnoughAllowance,
     AllowanceAlreadySet,
     ControllerRejected,
+    Overflow,
     IERC20
 } from "../contracts/MiniMeBase.sol";
 import { MiniMeToken } from "../contracts/MiniMeToken.sol";
@@ -90,6 +91,18 @@ contract GenerateTokensTest is MiniMeTokenTest {
         vm.pauseGasMetering();
         assertEq(minimeToken.totalSupply(), 10, "total supply should be correct");
         assertEq(minimeToken.balanceOf(accounts[0]), 10, "receiver should have balance");
+        vm.resumeGasMetering();
+    }
+
+    function testGenerateTokensSupplyOverflow() public {
+        vm.pauseGasMetering();
+        uint128 max_uint128;
+        unchecked {
+            max_uint128 = max_uint128 - 1;
+        }
+        _generateTokens(accounts[0], max_uint128);
+        vm.expectRevert(Overflow.selector);
+        _generateTokens(accounts[1], 1);
         vm.resumeGasMetering();
     }
 }
