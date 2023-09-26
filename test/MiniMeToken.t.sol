@@ -11,6 +11,7 @@ import {
     TransfersDisabled,
     InvalidDestination,
     NotEnoughBalance,
+    NotEnoughSupply,
     NotEnoughAllowance,
     AllowanceAlreadySet,
     ControllerRejected,
@@ -601,6 +602,37 @@ contract DestroyTokensTest is MiniMeTokenTest {
         vm.pauseGasMetering();
         assertEq(minimeToken.totalSupply(), 7, "total supply should be correct");
         assertEq(minimeToken.balanceOf(accounts[0]), 7, "balance of account should be reduced");
+        vm.resumeGasMetering();
+    }
+
+    function testDestroyTokensNotEnoughSupply() public {
+        vm.pauseGasMetering();
+        // ensure `accounts[0]` has tokens
+        _generateTokens(accounts[0], 10);
+
+        vm.prank(deployer);
+        vm.resumeGasMetering();
+        vm.expectRevert(NotEnoughSupply.selector);
+        minimeToken.destroyTokens(accounts[0], 11);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.totalSupply(), 10, "total supply should be correct");
+        assertEq(minimeToken.balanceOf(accounts[0]), 10, "balance of account should be reduced");
+        vm.resumeGasMetering();
+    }
+
+    function testDestroyTokensNotEnoughBalance() public {
+        vm.pauseGasMetering();
+        // ensure `accounts[0]` has tokens
+        _generateTokens(accounts[0], 10);
+        _generateTokens(accounts[1], 10);
+
+        vm.expectRevert(NotEnoughBalance.selector);
+        vm.prank(deployer);
+        vm.resumeGasMetering();
+        minimeToken.destroyTokens(accounts[0], 11);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.totalSupply(), 20, "total supply should be correct");
+        assertEq(minimeToken.balanceOf(accounts[0]), 10, "balance of account should be reduced");
         vm.resumeGasMetering();
     }
 }
