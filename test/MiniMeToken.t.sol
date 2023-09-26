@@ -32,12 +32,12 @@ contract MiniMeTokenTest is Test {
     function testDeployment() public {
         (, address parentToken, uint256 parentSnapShotBlock, string memory name, uint8 decimals, string memory symbol,)
         = deploymentConfig.activeNetworkConfig();
-        assertEq(minimeToken.name(), name);
-        assertEq(minimeToken.symbol(), symbol);
-        assertEq(minimeToken.decimals(), decimals);
-        assertEq(minimeToken.controller(), deployer);
-        assertEq(address(minimeToken.parentToken()), parentToken);
-        assertEq(minimeToken.parentSnapShotBlock(), parentSnapShotBlock);
+        assertEq(minimeToken.name(), name, "name should be correct");
+        assertEq(minimeToken.symbol(), symbol, "symbol should be correct");
+        assertEq(minimeToken.decimals(), decimals, "decimals should be correct");
+        assertEq(minimeToken.controller(), deployer, "controller should be correct");
+        assertEq(address(minimeToken.parentToken()), parentToken, "parent token should be correct");
+        assertEq(minimeToken.parentSnapShotBlock(), parentSnapShotBlock, "parent snapshot block should be correct");
     }
 
     function _generateTokens(address to, uint256 amount) internal {
@@ -60,8 +60,8 @@ contract GenerateTokensTest is MiniMeTokenTest {
         vm.resumeGasMetering();
         _generateTokens(accounts[0], 10);
         vm.pauseGasMetering();
-        assertEq(minimeToken.totalSupply(), 10);
-        assertEq(minimeToken.balanceOf(accounts[0]), 10);
+        assertEq(minimeToken.totalSupply(), 10, "total supply should be correct");
+        assertEq(minimeToken.balanceOf(accounts[0]), 10, "receiver should have balance");
         vm.resumeGasMetering();
     }
 }
@@ -83,8 +83,8 @@ contract TransferTest is MiniMeTokenTest {
         vm.pauseGasMetering();
         vm.stopPrank();
 
-        assertEq(minimeToken.balanceOf(accounts[0]), 6);
-        assertEq(minimeToken.balanceOf(accounts[1]), 4);
+        assertEq(minimeToken.balanceOf(accounts[0]), 6, "balance of sender should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 4, "balance of receiver should be increased");
 
         vm.resumeGasMetering(); 
     }
@@ -105,12 +105,11 @@ contract TransferTest is MiniMeTokenTest {
         minimeToken.transfer(accounts[1], 2);
         vm.pauseGasMetering();
 
-        assertEq(minimeToken.totalSupply(), 10);
-        assertEq(minimeToken.balanceOf(accounts[0]), 8);
-        assertEq(minimeToken.balanceOf(accounts[1]), 2);
+        assertEq(minimeToken.totalSupply(), 10, "total supply should be correct");
+        assertEq(minimeToken.balanceOf(accounts[0]), 8, "balance of sender should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 2, "balance of receiver should be increased");
 
-        // check balance at original block
-        assertEq(minimeToken.balanceOfAt(accounts[0], currentBlock), 10);
+        assertEq(minimeToken.balanceOfAt(accounts[0], currentBlock), 10, "balance at original block should be correct");
         vm.resumeGasMetering();
     }
     
@@ -128,7 +127,7 @@ contract AllowanceTest is MiniMeTokenTest {
         minimeToken.approve(accounts[1], 2);
         vm.pauseGasMetering();
         uint256 allowed = minimeToken.allowance(accounts[0], accounts[1]);
-        assertEq(allowed, 2);
+        assertEq(allowed, 2, "allowance should be correct");
 
         uint256 currentBlock = block.number;
         uint256 nextBlock = currentBlock + 1;
@@ -143,16 +142,16 @@ contract AllowanceTest is MiniMeTokenTest {
         minimeToken.transferFrom(accounts[0], accounts[2], 1);
 
         allowed = minimeToken.allowance(accounts[0], accounts[1]);
-        assertEq(allowed, 1);
+        assertEq(allowed, 1, "allowance should be reduced");
 
-        assertEq(minimeToken.totalSupply(), 10);
-        assertEq(minimeToken.balanceOf(accounts[0]), 9);
-        assertEq(minimeToken.balanceOf(accounts[2]), 1);
+        assertEq(minimeToken.totalSupply(), 10, "total supply should be correct");
+        assertEq(minimeToken.balanceOf(accounts[0]), 9, "balance of sender should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[2]), 1, "balance of receiver should be increased");
 
         // check balance at blocks
-        assertEq(minimeToken.balanceOfAt(accounts[0], currentBlock), 10);
-        assertEq(minimeToken.balanceOfAt(accounts[0], nextBlock), 9);
-        assertEq(minimeToken.balanceOfAt(accounts[2], nextBlock), 1);
+        assertEq(minimeToken.balanceOfAt(accounts[0], currentBlock), 10, "balance at original block should be correct");
+        assertEq(minimeToken.balanceOfAt(accounts[0], nextBlock), 9, "balance at next block should be correct");
+        assertEq(minimeToken.balanceOfAt(accounts[2], nextBlock), 1, "balance at next block should be correct");
         vm.resumeGasMetering();
     }
 }
@@ -171,8 +170,8 @@ contract DestroyTokensTest is MiniMeTokenTest {
         vm.resumeGasMetering();
         minimeToken.destroyTokens(accounts[0], 3);
         vm.pauseGasMetering();
-        assertEq(minimeToken.totalSupply(), 7);
-        assertEq(minimeToken.balanceOf(accounts[0]), 7);
+        assertEq(minimeToken.totalSupply(), 7, "total supply should be correct");
+        assertEq(minimeToken.balanceOf(accounts[0]), 7, "balance of account should be reduced");
         vm.resumeGasMetering();
     }
 }
@@ -207,27 +206,27 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
         vm.resumeGasMetering();
         MiniMeToken clone = _createClone();
         vm.pauseGasMetering();
-        assertEq(address(clone.parentToken()), address(minimeToken));
-        assertEq(clone.parentSnapShotBlock(), block.number);
-        assertEq(clone.totalSupply(), 15);
-        assertEq(clone.balanceOf(accounts[0]), 7);
-        assertEq(clone.balanceOf(accounts[1]), 3);
-        assertEq(clone.balanceOf(accounts[2]), 5);
+        assertEq(address(clone.parentToken()), address(minimeToken), "parent token should be correct");
+        assertEq(clone.parentSnapShotBlock(), block.number, "parent snapshot block should be correct");
+        assertEq(clone.totalSupply(), 15, "total supply should be correct");
+        assertEq(clone.balanceOf(accounts[0]), 7, "balance of account 0 should be correct");
+        assertEq(clone.balanceOf(accounts[1]), 3, "balance of account 1 should be correct");
+        assertEq(clone.balanceOf(accounts[2]), 5, "balance of account 2 should be correct");
 
-        assertEq(clone.totalSupplyAt(currentBlock), 7);
-        assertEq(clone.totalSupplyAt(nextBlock), 10);
+        assertEq(clone.totalSupplyAt(currentBlock), 7, "total supply at current block should be correct");
+        assertEq(clone.totalSupplyAt(nextBlock), 10, "total supply at next block should be correct");
 
-        assertEq(clone.balanceOfAt(accounts[0], currentBlock), 7);
-        assertEq(clone.balanceOfAt(accounts[1], currentBlock), 0);
-        assertEq(clone.balanceOfAt(accounts[2], currentBlock), 0);
+        assertEq(clone.balanceOfAt(accounts[0], currentBlock), 7, "balance of account 0 at current block should be correct");
+        assertEq(clone.balanceOfAt(accounts[1], currentBlock), 0, "balance of account 1 at current block should be correct");
+        assertEq(clone.balanceOfAt(accounts[2], currentBlock), 0, "balance of account 2 at current block should be correct");
 
-        assertEq(clone.balanceOfAt(accounts[0], nextBlock), 7);
-        assertEq(clone.balanceOfAt(accounts[1], nextBlock), 3);
-        assertEq(clone.balanceOfAt(accounts[2], nextBlock), 0);
+        assertEq(clone.balanceOfAt(accounts[0], nextBlock), 7, "balance of account 0 at next block should be correct");
+        assertEq(clone.balanceOfAt(accounts[1], nextBlock), 3, "balance of account 1 at next block should be correct");
+        assertEq(clone.balanceOfAt(accounts[2], nextBlock), 0, "balance of account 2 at next block should be correct");
 
-        assertEq(clone.balanceOfAt(accounts[0], secondNextBlock), 7);
-        assertEq(clone.balanceOfAt(accounts[1], secondNextBlock), 3);
-        assertEq(clone.balanceOfAt(accounts[2], secondNextBlock), 5);
+        assertEq(clone.balanceOfAt(accounts[0], secondNextBlock), 7, "balance of account 0 at second next block should be correct");
+        assertEq(clone.balanceOfAt(accounts[1], secondNextBlock), 3, "balance of account 1 at second next block should be correct");
+        assertEq(clone.balanceOfAt(accounts[2], secondNextBlock), 5, "balance of account 2 at second next block should be correct");
         vm.resumeGasMetering();
     }
 
@@ -237,10 +236,11 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
 
         vm.prank(deployer);
         MiniMeToken clone = _createClone();
-        assertEq(clone.totalSupply(), 10);
+        assertEq(clone.totalSupply(), 10, "total supply should be correct");
 
         vm.prank(deployer);
         vm.resumeGasMetering();
         clone.generateTokens(accounts[0], 5);
+        assertEq(clone.totalSupply(), 15, "total supply should be correct");
     }
 }
