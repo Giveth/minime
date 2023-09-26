@@ -3,27 +3,30 @@
 | Deployment Cost                                | Deployment Size |       |        |       |         |
 | 2149485                                        | 12251           |       |        |       |         |
 | Function Name                                  | min             | avg   | median | max   | # calls |
-| allowance                                      | 0               | 62    | 0      | 808   | 13      |
+| DOMAIN_SEPARATOR                               | 365             | 365   | 365    | 365   | 10      |
+| allowance                                      | 0               | 202   | 0      | 808   | 16      |
 | approve                                        | 0               | 15064 | 14767  | 31771 | 10      |
 | approveAndCall                                 | 0               | 31232 | 0      | 93698 | 3       |
-| balanceOf                                      | 0               | 550   | 0      | 2731  | 63      |
+| balanceOf                                      | 0               | 657   | 0      | 2731  | 67      |
 | balanceOfAt                                    | 0               | 905   | 0      | 4027  | 78      |
 | changeController                               | 0               | 593   | 0      | 3558  | 6       |
 | claimTokens                                    | 9537            | 41267 | 57132  | 57132 | 3       |
-| controller                                     | 0               | 0     | 0      | 0     | 9       |
-| decimals                                       | 0               | 0     | 0      | 0     | 9       |
+| controller                                     | 0               | 0     | 0      | 0     | 10      |
+| decimals                                       | 0               | 0     | 0      | 0     | 10      |
 | destroyTokens                                  | 2286            | 5185  | 4288   | 8983  | 3       |
 | enableTransfers                                | 0               | 0     | 0      | 0     | 3       |
-| generateTokens                                 | 0               | 14015 | 0      | 95885 | 62      |
-| name                                           | 0               | 0     | 0      | 0     | 9       |
-| parentSnapShotBlock                            | 0               | 0     | 0      | 0     | 10      |
-| parentToken                                    | 0               | 0     | 0      | 0     | 10      |
+| generateTokens                                 | 0               | 16532 | 0      | 95885 | 64      |
+| name                                           | 0               | 0     | 0      | 0     | 10      |
+| nonces                                         | 632             | 1832  | 2632   | 2632  | 5       |
+| parentSnapShotBlock                            | 0               | 0     | 0      | 0     | 11      |
+| parentToken                                    | 0               | 0     | 0      | 0     | 11      |
+| permit                                         | 689             | 39800 | 53934  | 58434 | 10      |
 | receive                                        | 7960            | 7979  | 7979   | 7998  | 2       |
-| symbol                                         | 0               | 0     | 0      | 0     | 9       |
-| totalSupply                                    | 0               | 286   | 0      | 2480  | 22      |
+| symbol                                         | 0               | 0     | 0      | 0     | 10      |
+| totalSupply                                    | 0               | 274   | 0      | 2480  | 23      |
 | totalSupplyAt                                  | 0               | 873   | 0      | 3659  | 17      |
 | transfer                                       | 526             | 39283 | 50395  | 93092 | 20      |
-| transferFrom                                   | 0               | 16834 | 3495   | 66574 | 7       |
+| transferFrom                                   | 0               | 19678 | 3495   | 66574 | 11      |
 
 
 

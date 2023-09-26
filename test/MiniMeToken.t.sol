@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import { Test } from "forge-std/Test.sol";
+import { Test, console } from "forge-std/Test.sol";
 import { Deploy } from "../script/Deploy.s.sol";
 import { DeploymentConfig } from "../script/DeploymentConfig.s.sol";
 
@@ -1161,5 +1161,255 @@ contract TestSnapshotReads is MiniMeTokenTest {
             2,
             "balance of account 3 at next block should be correct"
         );
+    }
+}
+
+import {
+    ERC2612InvalidSigner,
+    ERC2612ExpiredSignature,
+    ECDSA,
+    NotEnoughBalance,
+    NotEnoughAllowance
+} from "../contracts/MiniMeBase.sol";
+
+contract TestPermit is MiniMeTokenTest {
+    SigUtils internal sigUtils;
+    uint256 internal ownerPrivateKey = 0xA11CE;
+    uint256 internal spenderPrivateKey = 0xB0B;
+    address internal owner = vm.addr(ownerPrivateKey);
+    address internal spender = vm.addr(spenderPrivateKey);
+
+    function setUp() public virtual override {
+        MiniMeTokenTest.setUp();
+
+        sigUtils = new SigUtils(minimeToken.DOMAIN_SEPARATOR());
+    }
+
+    function testPermit() public {
+        SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 1e18,
+            nonce: 0,
+            deadline: block.timestamp + 1 days
+        });
+
+        bytes32 digest = sigUtils.getTypedDataHash(permit);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+
+        assertEq(minimeToken.allowance(owner, spender), 1e18);
+        assertEq(minimeToken.nonces(owner), 1);
+    }
+
+    function testRevertExpiredPermit() public {
+        SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 1e18,
+            nonce: minimeToken.nonces(owner),
+            deadline: block.timestamp - 1 seconds
+        });
+
+        bytes32 digest = sigUtils.getTypedDataHash(permit);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+
+        vm.expectRevert(abi.encodeWithSelector(ERC2612ExpiredSignature.selector, permit.deadline));
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+    }
+
+    function testRevertInvalidSigner() public {
+        SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 1e18,
+            nonce: minimeToken.nonces(owner),
+            deadline: block.timestamp + 1 days
+        });
+
+        bytes32 digest = sigUtils.getTypedDataHash(permit);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(spenderPrivateKey, digest); // spender signs owner's approval
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC2612InvalidSigner.selector, ECDSA.recover(digest, v, r, s), permit.owner)
+        );
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+    }
+
+    function testRevertInvalidNonce() public {
+        SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 1e18,
+            nonce: 1, // owner nonce stored on-chain is 0
+            deadline: block.timestamp + 1 days
+        });
+        bytes32 digest = sigUtils.getTypedDataHash(permit);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+
+        SigUtils.Permit memory permitNeeded = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 1e18,
+            nonce: 0, // owner nonce stored on-chain is 0
+            deadline: block.timestamp + 1 days
+        });
+        bytes32 digestNeeded = sigUtils.getTypedDataHash(permitNeeded);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC2612InvalidSigner.selector, ECDSA.recover(digestNeeded, v, r, s), permit.owner)
+        );
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+    }
+
+    function testRevertSignatureReplay() public {
+        SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 1e18,
+            nonce: minimeToken.nonces(owner),
+            deadline: block.timestamp + 1 days
+        });
+
+        bytes32 digest = sigUtils.getTypedDataHash(permit);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+
+        SigUtils.Permit memory permitNeeded = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 1e18,
+            nonce: minimeToken.nonces(owner),
+            deadline: block.timestamp + 1 days
+        });
+
+        bytes32 digestNeeded = sigUtils.getTypedDataHash(permitNeeded);
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC2612InvalidSigner.selector, ECDSA.recover(digestNeeded, v, r, s), permit.owner)
+        );
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+    }
+
+    function testTransferFromLimitedPermit() public {
+        _generateTokens(owner, 1e18);
+        SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 1e18,
+            nonce: 0,
+            deadline: block.timestamp + 1 days
+        });
+
+        bytes32 digest = sigUtils.getTypedDataHash(permit);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+
+        vm.prank(spender);
+        minimeToken.transferFrom(owner, spender, 1e18);
+
+        assertEq(minimeToken.balanceOf(owner), 0);
+        assertEq(minimeToken.balanceOf(spender), 1e18);
+        assertEq(minimeToken.allowance(owner, spender), 0);
+    }
+
+    function testTransferFromMaxPermit() public {
+        _generateTokens(owner, 1e18);
+        SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: type(uint256).max,
+            nonce: 0,
+            deadline: block.timestamp + 1 days
+        });
+
+        bytes32 digest = sigUtils.getTypedDataHash(permit);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+
+        vm.prank(spender);
+        minimeToken.transferFrom(owner, spender, 1e18);
+
+        assertEq(minimeToken.balanceOf(owner), 0);
+        assertEq(minimeToken.balanceOf(spender), 1e18);
+        assertEq(minimeToken.allowance(owner, spender), type(uint256).max - 1e18);
+    }
+
+    function testInvalidAllowance() public {
+        SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 5e17, // approve only 0.5 tokens
+            nonce: 0,
+            deadline: block.timestamp + 1 days
+        });
+
+        bytes32 digest = sigUtils.getTypedDataHash(permit);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+
+        vm.prank(spender);
+        vm.expectRevert(NotEnoughAllowance.selector);
+        minimeToken.transferFrom(owner, spender, 1e18); // attempt to transfer 1 token
+    }
+
+    function testInvalidBalance() public {
+        SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: owner,
+            spender: spender,
+            value: 2e18, // approve 2 tokens
+            nonce: 0,
+            deadline: block.timestamp + 1 days
+        });
+
+        bytes32 digest = sigUtils.getTypedDataHash(permit);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+
+        minimeToken.permit(permit.owner, permit.spender, permit.value, permit.deadline, v, r, s);
+        vm.prank(spender);
+        vm.expectRevert(NotEnoughBalance.selector);
+        minimeToken.transferFrom(owner, spender, 2e18); // attempt to transfer 2 tokens (owner only owns 1)
+    }
+}
+
+contract SigUtils {
+    bytes32 internal DOMAIN_SEPARATOR;
+
+    constructor(bytes32 _DOMAIN_SEPARATOR) {
+        DOMAIN_SEPARATOR = _DOMAIN_SEPARATOR;
+    }
+
+    // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+
+    struct Permit {
+        address owner;
+        address spender;
+        uint256 value;
+        uint256 nonce;
+        uint256 deadline;
+    }
+
+    // computes the hash of a permit
+    function getStructHash(Permit memory _permit) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encode(PERMIT_TYPEHASH, _permit.owner, _permit.spender, _permit.value, _permit.nonce, _permit.deadline)
+        );
+    }
+
+    // computes the hash of the fully encoded EIP-712 message for the domain, which can be used to recover the signer
+    function getTypedDataHash(Permit memory _permit) public view returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getStructHash(_permit)));
     }
 }
