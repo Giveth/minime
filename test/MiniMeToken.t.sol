@@ -12,9 +12,11 @@ import {
     InvalidDestination,
     NotEnoughBalance,
     NotEnoughAllowance,
-    AllowanceAlreadySet
+    AllowanceAlreadySet,
+    IERC20
 } from "../contracts/MiniMeToken.sol";
 import { MiniMeTokenFactory } from "../contracts/MiniMeTokenFactory.sol";
+import { ApproveAndCallFallBack } from "../contracts/ApproveAndCallFallBack.sol";
 
 contract MiniMeTokenTest is Test {
     DeploymentConfig internal deploymentConfig;
@@ -374,6 +376,165 @@ contract AllowanceTest is MiniMeTokenTest {
         vm.stopPrank();
         assertEq(minimeToken.allowance(accounts[0], accounts[1]), 3, "allowance should be 3");
         vm.resumeGasMetering();
+    }
+
+    function testApproveAndCall() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        ApproverAccount approverAccount = new ApproverAccount(minimeToken);
+        vm.startPrank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.approveAndCall(
+            address(approverAccount), 2, abi.encodeWithSelector(approverAccount.depositToken1.selector, "message", 123)
+        );
+        vm.pauseGasMetering();
+        assertEq(minimeToken.allowance(accounts[0], address(approverAccount)), 0, "allowance should be 0");
+        assertEq(minimeToken.balanceOf(address(approverAccount)), 2, "approverAccount should have 2 tokens");
+        assertEq(minimeToken.balanceOf(accounts[0]), 8, "balance of sender should be reduced");
+        assertEq(approverAccount.message(), "message", "message should be correct");
+        minimeToken.approveAndCall(
+            address(approverAccount), 2, abi.encodeWithSelector(approverAccount.depositToken2.selector, true, "data")
+        );
+        assertEq(minimeToken.allowance(accounts[0], address(approverAccount)), 0, "allowance should be 0");
+        assertEq(minimeToken.balanceOf(address(approverAccount)), 4, "approverAccount should have 2 tokens");
+        assertEq(minimeToken.balanceOf(accounts[0]), 6, "balance of sender should be reduced");
+        assertEq(approverAccount.data(), "data", "data should be correct");
+        vm.expectRevert("ApproverAccount: invalid method");
+        minimeToken.approveAndCall(
+            address(approverAccount),
+            2,
+            abi.encodeWithSelector(approverAccount.unsupportedMethod.selector, true, "data")
+        );
+        vm.stopPrank();
+        vm.resumeGasMetering();
+    }
+}
+
+contract ApproverAccount is ApproveAndCallFallBack {
+    IERC20 public token;
+
+    string public message;
+    bytes public data;
+
+    constructor(IERC20 _token) {
+        token = _token;
+    }
+
+    event ApprovalReceived(address _from, uint256 _amount, address _token, bytes _data);
+    event TokenDeposit1(address indexed _from, uint256 _amount, string _message, uint256 _number);
+    event TokenDeposit2(address indexed _from, uint256 _amount, bool _value, bytes _data);
+
+    function receiveApproval(address _from, uint256 _amount, address _token, bytes memory _data) public override {
+        emit ApprovalReceived(_from, _amount, _token, _data);
+        require(_token == address(token), "ApproverAccount: token is not correct");
+        bytes4 sig = abiDecodeSig(_data);
+        bytes memory cdata = slice(_data, 4, _data.length - 4);
+        if (sig == this.depositToken1.selector) {
+            (string memory _message, uint256 _number) = abi.decode(cdata, (string, uint256));
+            depositToken1(_from, _amount, _message, _number);
+        } else if (sig == this.depositToken2.selector) {
+            (bool _value, bytes memory _decodedData) = abi.decode(cdata, (bool, bytes));
+            depositToken2(_from, _amount, _value, _decodedData);
+        } else {
+            revert("ApproverAccount: invalid method");
+        }
+    }
+
+    function depositToken1(string memory _message, uint256 _number) external {
+        depositToken1(msg.sender, token.allowance(msg.sender, address(this)), _message, _number);
+    }
+
+    function depositToken2(bool _value, bytes memory _data) external {
+        depositToken2(msg.sender, token.allowance(msg.sender, address(this)), _value, _data);
+    }
+
+    function depositToken1(address _from, uint256 _amount, string memory _message, uint256 _number) internal {
+        IERC20(token).transferFrom(_from, address(this), _amount);
+        message = _message;
+        emit TokenDeposit1(_from, _amount, _message, _number);
+    }
+
+    function depositToken2(address _from, uint256 _amount, bool _value, bytes memory _data) internal {
+        IERC20(token).transferFrom(_from, address(this), _amount);
+        data = _data;
+        emit TokenDeposit2(_from, _amount, _value, _data);
+    }
+
+    function unsupportedMethod() external {
+        revert("ApproverAccount: unsupported method");
+    }
+    /**
+     * @dev decodes sig of abi encoded call
+     * @param _data abi encoded data
+     * @return sig (first 4 bytes)
+     */
+
+    function abiDecodeSig(bytes memory _data) private pure returns (bytes4 sig) {
+        assembly {
+            sig := mload(add(_data, add(0x20, 0)))
+        }
+    }
+
+    /**
+     * @dev get a slice of byte array
+     * @param _bytes source
+     * @param _start pointer
+     * @param _length size to read
+     * @return sliced bytes
+     */
+    function slice(bytes memory _bytes, uint256 _start, uint256 _length) private pure returns (bytes memory) {
+        require(_bytes.length >= (_start + _length));
+
+        bytes memory tempBytes;
+
+        assembly {
+            switch iszero(_length)
+            case 0 {
+                // Get a location of some free memory and store it in tempBytes as
+                // Solidity does for memory variables.
+                tempBytes := mload(0x40)
+
+                // The first word of the slice result is potentially a partial
+                // word read from the original array. To read it, we calculate
+                // the length of that partial word and start copying that many
+                // bytes into the array. The first word we copy will start with
+                // data we don't care about, but the last `lengthmod` bytes will
+                // land at the beginning of the contents of the new array. When
+                // we're done copying, we overwrite the full first word with
+                // the actual length of the slice.
+                let lengthmod := and(_length, 31)
+
+                // The multiplication in the next line is necessary
+                // because when slicing multiples of 32 bytes (lengthmod == 0)
+                // the following copy loop was copying the origin's length
+                // and then ending prematurely not copying everything it should.
+                let mc := add(add(tempBytes, lengthmod), mul(0x20, iszero(lengthmod)))
+                let end := add(mc, _length)
+
+                for {
+                    // The multiplication in the next line has the same exact purpose
+                    // as the one above.
+                    let cc := add(add(add(_bytes, lengthmod), mul(0x20, iszero(lengthmod))), _start)
+                } lt(mc, end) {
+                    mc := add(mc, 0x20)
+                    cc := add(cc, 0x20)
+                } { mstore(mc, mload(cc)) }
+
+                mstore(tempBytes, _length)
+
+                //update free-memory pointer
+                //allocating the array padded to 32 bytes like the compiler does now
+                mstore(0x40, and(add(mc, 31), not(31)))
+            }
+            //if we want a zero-length slice let's just return a zero-length array
+            default {
+                tempBytes := mload(0x40)
+
+                mstore(0x40, add(tempBytes, 0x20))
+            }
+        }
+
+        return tempBytes;
     }
 }
 

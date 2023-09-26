@@ -3,9 +3,10 @@
 | Deployment Cost                                | Deployment Size |        |        |         |         |
 | 1788057                                        | 9919            |        |        |         |         |
 | Function Name                                  | min             | avg    | median | max     | # calls |
-| allowance                                      | 0               | 80     | 0      | 808     | 10      |
+| allowance                                      | 0               | 67     | 0      | 808     | 12      |
 | approve                                        | 0               | 15995  | 23208  | 31708   | 9       |
-| balanceOf                                      | 0               | 355    | 0      | 2753    | 41      |
+| approveAndCall                                 | 0               | 31199  | 0      | 93597   | 3       |
+| balanceOf                                      | 0               | 323    | 0      | 2753    | 45      |
 | balanceOfAt                                    | 0               | 90     | 0      | 2363    | 26      |
 | changeController                               | 0               | 1014   | 758    | 3558    | 5       |
 | claimTokens                                    | 9537            | 41277  | 57148  | 57148   | 3       |
@@ -14,7 +15,7 @@
 | decimals                                       | 0               | 0      | 0      | 0       | 7       |
 | destroyTokens                                  | 8956            | 8956   | 8956   | 8956    | 1       |
 | enableTransfers                                | 0               | 0      | 0      | 0       | 3       |
-| generateTokens                                 | 0               | 9264   | 0      | 95751   | 31      |
+| generateTokens                                 | 0               | 8974   | 0      | 95751   | 32      |
 | name                                           | 0               | 0      | 0      | 0       | 7       |
 | parentSnapShotBlock                            | 0               | 0      | 0      | 0       | 8       |
 | parentToken                                    | 0               | 0      | 0      | 0       | 8       |
@@ -22,7 +23,7 @@
 | totalSupply                                    | 0               | 273    | 0      | 1911    | 7       |
 | totalSupplyAt                                  | 0               | 285    | 0      | 1995    | 7       |
 | transfer                                       | 526             | 36631  | 40486  | 75187   | 16      |
-| transferFrom                                   | 0               | 15187  | 3495   | 66590   | 5       |
+| transferFrom                                   | 0               | 16836  | 3495   | 66590   | 7       |
 
 
 | contracts/MiniMeTokenFactory.sol:MiniMeTokenFactory contract |                 |        |        |         |         |
