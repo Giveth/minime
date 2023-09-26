@@ -7,14 +7,14 @@ import { DeploymentConfig } from "../script/DeploymentConfig.s.sol";
 
 import { NotAuthorized } from "../contracts/Controlled.sol";
 import {
-    MiniMeToken,
     TransfersDisabled,
     InvalidDestination,
     NotEnoughBalance,
     NotEnoughAllowance,
     AllowanceAlreadySet,
     IERC20
-} from "../contracts/MiniMeToken.sol";
+} from "../contracts/MiniMeBase.sol";
+import { MiniMeToken } from "../contracts/MiniMeToken.sol";
 import { MiniMeTokenFactory } from "../contracts/MiniMeTokenFactory.sol";
 import { ApproveAndCallFallBack } from "../contracts/ApproveAndCallFallBack.sol";
 
