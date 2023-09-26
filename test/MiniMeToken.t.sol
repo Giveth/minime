@@ -5,8 +5,9 @@ import { Test } from "forge-std/Test.sol";
 import { Deploy } from "../script/Deploy.s.sol";
 import { DeploymentConfig } from "../script/DeploymentConfig.s.sol";
 
-import { MiniMeToken } from "../contracts/MiniMeToken.sol";
-import { MiniMeTokenFactory } from "../contracts/MiniMeToken.sol";
+import { NotAuthorized } from "../contracts/Controlled.sol";
+import { MiniMeToken, TransfersDisabled, InvalidDestination, NotEnoughBalance } from "../contracts/MiniMeToken.sol";
+import { MiniMeTokenFactory } from "../contracts/MiniMeTokenFactory.sol";
 
 contract MiniMeTokenTest is Test {
     DeploymentConfig internal deploymentConfig;
@@ -54,7 +55,7 @@ contract GenerateTokensTest is MiniMeTokenTest {
     }
 
     function test_RevertWhen_SenderIsNotController() public {
-        vm.expectRevert();
+        vm.expectRevert(NotAuthorized.selector);
         minimeToken.generateTokens(accounts[0], 10);
     }
 
@@ -200,6 +201,68 @@ contract TransferTest is MiniMeTokenTest {
         assertEq(minimeToken.balanceOf(accounts[0]), 8, "balance of sender should be reduced");
         assertEq(minimeToken.balanceOf(accounts[1]), 3, "balance of receiver should be increased");
 
+        vm.resumeGasMetering();
+    }
+
+    function testInvalidDestinationTransfer() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        vm.expectRevert(InvalidDestination.selector);
+        vm.prank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.transfer(address(0), 2);
+    }
+
+    function testInvalidDestinationTransfer2() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        vm.expectRevert(InvalidDestination.selector);
+        vm.prank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.transfer(address(minimeToken), 2);
+    }
+
+    function testTransferDisabled() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        vm.prank(deployer);
+        minimeToken.enableTransfers(false);
+        vm.prank(accounts[0]);
+        vm.expectRevert(TransfersDisabled.selector);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.balanceOf(accounts[0]), 10, "balance of sender shouldn't be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 0, "balance of receiver shouldn't be increased");
+        vm.resumeGasMetering();
+    }
+
+    function testTransferFromDisabled() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        vm.prank(accounts[0]);
+        minimeToken.approve(accounts[1], 2);
+        vm.prank(deployer);
+        minimeToken.enableTransfers(false);
+        vm.prank(accounts[1]);
+        vm.expectRevert(TransfersDisabled.selector);
+        vm.resumeGasMetering();
+        minimeToken.transferFrom(accounts[0], accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.balanceOf(accounts[0]), 10, "balance of sender shouldn't be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 0, "balance of receiver shouldn't be increased");
+        vm.resumeGasMetering();
+    }
+
+    function testTransferNoBalance() public {
+        vm.pauseGasMetering();
+        vm.prank(accounts[0]);
+        vm.expectRevert(NotEnoughBalance.selector);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.balanceOf(accounts[0]), 0, "balance of sender shouldn't be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 0, "balance of receiver shouldn't be increased");
         vm.resumeGasMetering();
     }
 }

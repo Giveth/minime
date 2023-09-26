@@ -4,8 +4,8 @@
 | 1788057                                        | 9919            |        |        |         |         |
 | Function Name                                  | min             | avg    | median | max     | # calls |
 | allowance                                      | 0               | 269    | 0      | 808     | 3       |
-| approve                                        | 30781           | 31244  | 31244  | 31708   | 2       |
-| balanceOf                                      | 0               | 415    | 0      | 2753    | 35      |
+| approve                                        | 0               | 20829  | 30781  | 31708   | 3       |
+| balanceOf                                      | 0               | 355    | 0      | 2753    | 41      |
 | balanceOfAt                                    | 0               | 90     | 0      | 2363    | 26      |
 | changeController                               | 0               | 1014   | 758    | 3558    | 5       |
 | claimTokens                                    | 9537            | 41277  | 57148  | 57148   | 3       |
@@ -13,15 +13,16 @@
 | createCloneToken                               | 0               | 916398 | 916398 | 1832796 | 2       |
 | decimals                                       | 0               | 0      | 0      | 0       | 7       |
 | destroyTokens                                  | 8956            | 8956   | 8956   | 8956    | 1       |
-| generateTokens                                 | 0               | 12486  | 0      | 95751   | 23      |
+| enableTransfers                                | 0               | 0      | 0      | 0       | 2       |
+| generateTokens                                 | 0               | 10636  | 0      | 95751   | 27      |
 | name                                           | 0               | 0      | 0      | 0       | 7       |
 | parentSnapShotBlock                            | 0               | 0      | 0      | 0       | 8       |
 | parentToken                                    | 0               | 0      | 0      | 0       | 8       |
 | symbol                                         | 0               | 0      | 0      | 0       | 7       |
 | totalSupply                                    | 0               | 273    | 0      | 1911    | 7       |
 | totalSupplyAt                                  | 0               | 285    | 0      | 1995    | 7       |
-| transfer                                       | 9785            | 47934  | 53385  | 75187   | 12      |
-| transferFrom                                   | 0               | 23361  | 3495   | 66590   | 3       |
+| transfer                                       | 526             | 36631  | 40486  | 75187   | 16      |
+| transferFrom                                   | 0               | 17717  | 2139   | 66590   | 4       |
 
 
 | contracts/MiniMeTokenFactory.sol:MiniMeTokenFactory contract |                 |        |        |         |         |
