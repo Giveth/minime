@@ -368,7 +368,7 @@ abstract contract MiniMeBase is Controlled, IERC20, IERC20Permit, EIP712, Nonces
     /// @param _owner The address that will be assigned the new tokens
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
-    function mint(address _owner, uint256 _amount) internal returns (bool) {
+    function _mint(address _owner, uint256 _amount) internal virtual returns (bool) {
         uint256 curTotalSupply = totalSupply();
         if (uint128(curTotalSupply + _amount) < curTotalSupply) revert Overflow(); // Check for overflow
         uint256 previousBalanceTo = balanceOf(_owner);
@@ -383,7 +383,7 @@ abstract contract MiniMeBase is Controlled, IERC20, IERC20Permit, EIP712, Nonces
     /// @param _owner The address that will lose the tokens
     /// @param _amount The quantity of tokens to burn
     /// @return True if the tokens are burned correctly
-    function burn(address _owner, uint256 _amount) internal returns (bool) {
+    function _burn(address _owner, uint256 _amount) internal virtual returns (bool) {
         uint256 curTotalSupply = totalSupply();
         if (curTotalSupply < _amount) revert NotEnoughSupply();
         uint256 previousBalanceFrom = balanceOf(_owner);

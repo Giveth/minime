@@ -48,7 +48,7 @@ contract MiniMeToken is MiniMeBase {
     /// @param _amount The quantity of tokens generated
     /// @return True if the tokens are generated correctly
     function generateTokens(address _owner, uint256 _amount) public onlyController returns (bool) {
-        return mint(_owner, _amount);
+        return _mint(_owner, _amount);
     }
 
     /// @notice Burns `_amount` tokens from `_owner`
@@ -56,6 +56,6 @@ contract MiniMeToken is MiniMeBase {
     /// @param _amount The quantity of tokens to burn
     /// @return True if the tokens are burned correctly
     function destroyTokens(address _owner, uint256 _amount) public onlyController returns (bool) {
-        return burn(_owner, _amount);
+        return _burn(_owner, _amount);
     }
 }
