@@ -62,6 +62,22 @@ contract MiniMeTokenTest is Test {
     }
 }
 
+contract AcceptingController is TokenController {
+    receive() external payable { }
+
+    function proxyPayment(address) public payable override returns (bool) {
+        return true;
+    }
+
+    function onTransfer(address, address, uint256) public pure override returns (bool) {
+        return true;
+    }
+
+    function onApprove(address, address, uint256) public pure override returns (bool) {
+        return true;
+    }
+}
+
 contract RejectingController is TokenController {
     function proxyPayment(address) public payable override returns (bool) {
         return false;
@@ -73,6 +89,52 @@ contract RejectingController is TokenController {
 
     function onApprove(address, address, uint256) public pure override returns (bool) {
         return false;
+    }
+}
+
+contract ReceiveTest is MiniMeTokenTest {
+    function setUp() public virtual override {
+        MiniMeTokenTest.setUp();
+    }
+
+    function testAcceptingEther() public {
+        vm.pauseGasMetering();
+        AcceptingController acceptingController = new AcceptingController();
+        vm.prank(deployer);
+        minimeToken.changeController(payable(address(acceptingController)));
+
+        vm.deal(address(accounts[0]), 10 ether);
+        vm.startPrank(address(accounts[0]));
+        vm.resumeGasMetering();
+        (bool result,) = payable(address(minimeToken)).call{ value: 1 ether }("");
+        vm.pauseGasMetering();
+        vm.stopPrank();
+
+        assertTrue(result, "ether transfer should be successful");
+        assertEq(address(minimeToken).balance, 0, "minimeToken balance should be correct");
+        assertEq(address(acceptingController).balance, 1 ether, "acceptingController balance should be correct");
+        assertEq(address(accounts[0]).balance, 9 ether, "account balance should be correct");
+        vm.resumeGasMetering();
+    }
+
+    function testRejectingEther() public {
+        vm.pauseGasMetering();
+        RejectingController rejectingController = new RejectingController();
+        vm.prank(deployer);
+        minimeToken.changeController(payable(address(rejectingController)));
+
+        vm.deal(address(accounts[0]), 10 ether);
+        vm.startPrank(address(accounts[0]));
+        vm.resumeGasMetering();
+        (bool result,) = payable(address(minimeToken)).call{ value: 1 ether }("");
+        vm.pauseGasMetering();
+        vm.stopPrank();
+
+        assertFalse(result, "ether transfer should be rejected");
+        assertEq(address(minimeToken).balance, 0, "minimeToken balance should be correct");
+        assertEq(address(rejectingController).balance, 0, "rejectingController balance should be correct");
+        assertEq(address(accounts[0]).balance, 10 ether, "account balance should be correct");
+        vm.resumeGasMetering();
     }
 }
 
