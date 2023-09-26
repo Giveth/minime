@@ -54,6 +54,7 @@ contract MiniMeTokenTest is Test {
         assertEq(minimeToken.controller(), deployer, "controller should be correct");
         assertEq(address(minimeToken.parentToken()), parentToken, "parent token should be correct");
         assertEq(minimeToken.parentSnapShotBlock(), parentSnapShotBlock, "parent snapshot block should be correct");
+        assertEq(minimeToken.totalSupply(), 0, "total supply should be correct");
         vm.resumeGasMetering();
     }
 
@@ -912,5 +913,167 @@ contract ClaimTokensTest is MiniMeTokenTest {
         assertEq(minimeToken.balanceOf(address(deployer)), 1234, "minimeToken deployer balance should be 1234");
         vm.stopPrank();
         vm.resumeGasMetering();
+    }
+}
+
+contract TestSnapshotReads is MiniMeTokenTest {
+    function setUp() public virtual override {
+        MiniMeTokenTest.setUp();
+    }
+
+    function testSnapshotReads() public {
+        _generateTokens(accounts[0], 10);
+        _generateTokens(accounts[1], 5);
+        _generateTokens(accounts[2], 3);
+        _generateTokens(accounts[3], 1);
+
+        uint256 currentBlock = block.number;
+        uint256 nextBlock = currentBlock + 1;
+        uint256 secondNextBlock = currentBlock + 2;
+        uint256 thirdNextBlock = currentBlock + 3;
+
+        vm.roll(nextBlock);
+        _generateTokens(accounts[0], 2);
+        _generateTokens(accounts[1], 1);
+        _generateTokens(accounts[2], 1);
+        _generateTokens(accounts[3], 1);
+
+        vm.roll(secondNextBlock);
+        _generateTokens(accounts[0], 1);
+        _generateTokens(accounts[1], 1);
+        _generateTokens(accounts[2], 1);
+
+        vm.roll(thirdNextBlock);
+        _generateTokens(accounts[0], 1);
+        _generateTokens(accounts[1], 1);
+
+        assertEq(minimeToken.totalSupply(), 29, "total supply should be correct");
+        assertEq(minimeToken.balanceOf(accounts[0]), 14, "balance of account 0 should be correct");
+        assertEq(minimeToken.balanceOf(accounts[1]), 8, "balance of account 1 should be correct");
+        assertEq(minimeToken.balanceOf(accounts[2]), 5, "balance of account 2 should be correct");
+        assertEq(minimeToken.balanceOf(accounts[3]), 2, "balance of account 3 should be correct");
+
+        assertEq(minimeToken.totalSupplyAt(currentBlock), 19, "total supply at current block should be correct");
+        assertEq(minimeToken.totalSupplyAt(nextBlock), 24, "total supply at next block should be correct");
+        assertEq(minimeToken.totalSupplyAt(secondNextBlock), 27, "total supply at second next block should be correct");
+        assertEq(minimeToken.totalSupplyAt(thirdNextBlock), 29, "total supply at third next block should be correct");
+
+        assertEq(
+            minimeToken.balanceOfAt(accounts[0], currentBlock),
+            10,
+            "balance of account 0 at current block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[1], currentBlock),
+            5,
+            "balance of account 1 at current block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[2], currentBlock),
+            3,
+            "balance of account 2 at current block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[3], currentBlock),
+            1,
+            "balance of account 3 at current block should be correct"
+        );
+
+        assertEq(
+            minimeToken.balanceOfAt(accounts[0], nextBlock), 12, "balance of account 0 at next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[1], nextBlock), 6, "balance of account 1 at next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[2], nextBlock), 4, "balance of account 2 at next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[3], nextBlock), 2, "balance of account 3 at next block should be correct"
+        );
+
+        assertEq(
+            minimeToken.balanceOfAt(accounts[0], secondNextBlock),
+            13,
+            "balance of account 0 at second next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[1], secondNextBlock),
+            7,
+            "balance of account 1 at second next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[2], secondNextBlock),
+            5,
+            "balance of account 2 at second next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[3], secondNextBlock),
+            2,
+            "balance of account 3 at second next block should be correct"
+        );
+
+        assertEq(
+            minimeToken.balanceOfAt(accounts[0], thirdNextBlock),
+            14,
+            "balance of account 0 at third next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[1], thirdNextBlock),
+            8,
+            "balance of account 1 at third next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[2], thirdNextBlock),
+            5,
+            "balance of account 2 at third next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[3], thirdNextBlock),
+            2,
+            "balance of account 3 at third next block should be correct"
+        );
+
+        assertEq(
+            minimeToken.balanceOfAt(accounts[0], currentBlock - 1),
+            0,
+            "balance of account 0 at previous block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[1], currentBlock - 1),
+            0,
+            "balance of account 1 at previous block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[2], currentBlock - 1),
+            0,
+            "balance of account 2 at previous block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[3], currentBlock - 1),
+            0,
+            "balance of account 3 at previous block should be correct"
+        );
+
+        assertEq(
+            minimeToken.balanceOfAt(accounts[0], thirdNextBlock + 1),
+            14,
+            "balance of account 0 at next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[1], thirdNextBlock + 1),
+            8,
+            "balance of account 1 at next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[2], thirdNextBlock + 1),
+            5,
+            "balance of account 2 at next block should be correct"
+        );
+        assertEq(
+            minimeToken.balanceOfAt(accounts[3], thirdNextBlock + 1),
+            2,
+            "balance of account 3 at next block should be correct"
+        );
     }
 }
