@@ -756,6 +756,7 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
         vm.roll(secondNextBlock);
         _generateTokens(accounts[2], 5);
         vm.resumeGasMetering();
+        vm.prank(deployer);
         MiniMeToken clone = _createClone();
         vm.pauseGasMetering();
         assertEq(address(clone.parentToken()), address(minimeToken), "parent token should be correct");
@@ -796,6 +797,81 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
             clone.balanceOfAt(accounts[2], secondNextBlock),
             5,
             "balance of account 2 at second next block should be correct"
+        );
+
+        vm.startPrank(deployer);
+        clone.generateTokens(accounts[0], 5);
+        clone.generateTokens(accounts[1], 5);
+        clone.generateTokens(accounts[2], 5);
+        clone.generateTokens(accounts[3], 5);
+        assertEq(clone.totalSupply(), 35, "total supply should be correct");
+
+        uint256 thirdNextBlock = block.number + 3;
+        vm.roll(thirdNextBlock);
+
+        clone.generateTokens(accounts[0], 5);
+        clone.generateTokens(accounts[1], 5);
+        clone.generateTokens(accounts[2], 5);
+        clone.generateTokens(accounts[3], 5);
+
+        assertEq(clone.totalSupply(), 55, "total supply should be correct");
+        assertEq(clone.totalSupplyAt(currentBlock - 1), 0, "total supply at current block-1 should be correct");
+        assertEq(clone.totalSupplyAt(currentBlock), 7, "total supply at current block should be correct");
+        assertEq(clone.totalSupplyAt(thirdNextBlock), 55, "total supply at thirdNextBlock should be correct");
+
+        assertEq(
+            clone.balanceOfAt(accounts[0], currentBlock - 1),
+            0,
+            "balance of account 0 at current block-1 should be correct"
+        );
+        assertEq(
+            clone.balanceOfAt(accounts[1], currentBlock - 1),
+            0,
+            "balance of account 1 at current block-1 should be correct"
+        );
+        assertEq(
+            clone.balanceOfAt(accounts[2], currentBlock - 1),
+            0,
+            "balance of account 2 at current block-1 should be correct"
+        );
+        assertEq(
+            clone.balanceOfAt(accounts[3], currentBlock - 1),
+            0,
+            "balance of account 3 at current block-1 should be correct"
+        );
+
+        assertEq(
+            clone.balanceOfAt(accounts[0], currentBlock), 7, "balance of account 0 at current block should be correct"
+        );
+        assertEq(
+            clone.balanceOfAt(accounts[1], currentBlock), 0, "balance of account 1 at current block should be correct"
+        );
+        assertEq(
+            clone.balanceOfAt(accounts[2], currentBlock), 0, "balance of account 2 at current block should be correct"
+        );
+        assertEq(
+            clone.balanceOfAt(accounts[3], currentBlock), 0, "balance of account 3 at current block should be correct"
+        );
+
+        assertEq(
+            clone.balanceOfAt(accounts[0], thirdNextBlock),
+            17,
+            "balance of account 0 at third next block should be correct"
+        );
+        assertEq(
+            clone.balanceOfAt(accounts[1], thirdNextBlock),
+            13,
+            "balance of account 1 at third next block should be correct"
+        );
+        assertEq(
+            clone.balanceOfAt(accounts[2], thirdNextBlock),
+            15,
+            "balance of account 2 at third next block should be correct"
+        );
+        assertEq(
+            clone.balanceOfAt(accounts[3], thirdNextBlock),
+            10,
+            "balance of account 3 at third next block should be correct"
         );
         vm.resumeGasMetering();
     }
