@@ -57,10 +57,12 @@ contract GenerateTokensTest is MiniMeTokenTest {
     }
 
     function testGenerateTokens() public {
+        vm.resumeGasMetering();
         _generateTokens(accounts[0], 10);
-
+        vm.pauseGasMetering();
         assertEq(minimeToken.totalSupply(), 10);
         assertEq(minimeToken.balanceOf(accounts[0]), 10);
+        vm.resumeGasMetering();
     }
 }
 
@@ -70,6 +72,7 @@ contract TransferTest is MiniMeTokenTest {
     }
 
     function testTransfer() public {
+        vm.pauseGasMetering();
         uint256 currentBlock = block.number;
         uint256 nextBlock = currentBlock + 1;
 
@@ -79,7 +82,10 @@ contract TransferTest is MiniMeTokenTest {
         vm.roll(nextBlock);
 
         vm.prank(accounts[0]);
+
+        vm.resumeGasMetering();
         minimeToken.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
 
         assertEq(minimeToken.totalSupply(), 10);
         assertEq(minimeToken.balanceOf(accounts[0]), 8);
@@ -87,7 +93,9 @@ contract TransferTest is MiniMeTokenTest {
 
         // check balance at original block
         assertEq(minimeToken.balanceOfAt(accounts[0], currentBlock), 10);
+        vm.resumeGasMetering();
     }
+    
 }
 
 contract AllowanceTest is MiniMeTokenTest {
@@ -96,9 +104,11 @@ contract AllowanceTest is MiniMeTokenTest {
     }
 
     function testAllowance() public {
+        vm.pauseGasMetering();
         vm.prank(accounts[0]);
+        vm.resumeGasMetering();
         minimeToken.approve(accounts[1], 2);
-
+        vm.pauseGasMetering();
         uint256 allowed = minimeToken.allowance(accounts[0], accounts[1]);
         assertEq(allowed, 2);
 
@@ -125,6 +135,7 @@ contract AllowanceTest is MiniMeTokenTest {
         assertEq(minimeToken.balanceOfAt(accounts[0], currentBlock), 10);
         assertEq(minimeToken.balanceOfAt(accounts[0], nextBlock), 9);
         assertEq(minimeToken.balanceOfAt(accounts[2], nextBlock), 1);
+        vm.resumeGasMetering();
     }
 }
 
@@ -134,14 +145,17 @@ contract DestroyTokensTest is MiniMeTokenTest {
     }
 
     function testDestroyTokens() public {
+        vm.pauseGasMetering();
         // ensure `accounts[0]` has tokens
         _generateTokens(accounts[0], 10);
 
         vm.prank(deployer);
+        vm.resumeGasMetering();
         minimeToken.destroyTokens(accounts[0], 3);
-
+        vm.pauseGasMetering();
         assertEq(minimeToken.totalSupply(), 7);
         assertEq(minimeToken.balanceOf(accounts[0]), 7);
+        vm.resumeGasMetering();
     }
 }
 
@@ -162,6 +176,7 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
     }
 
     function testCreateCloneToken() public {
+        vm.pauseGasMetering();
         // fund some accounts to later check if cloned token has same balances
         uint256 currentBlock = block.number;
         _generateTokens(accounts[0], 7);
@@ -171,9 +186,9 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
         uint256 secondNextBlock = block.number + 2;
         vm.roll(secondNextBlock);
         _generateTokens(accounts[2], 5);
-
+        vm.resumeGasMetering();
         MiniMeToken clone = _createClone();
-
+        vm.pauseGasMetering();
         assertEq(address(clone.parentToken()), address(minimeToken));
         assertEq(clone.parentSnapShotBlock(), block.number);
         assertEq(clone.totalSupply(), 15);
@@ -195,9 +210,11 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
         assertEq(clone.balanceOfAt(accounts[0], secondNextBlock), 7);
         assertEq(clone.balanceOfAt(accounts[1], secondNextBlock), 3);
         assertEq(clone.balanceOfAt(accounts[2], secondNextBlock), 5);
+        vm.resumeGasMetering();
     }
 
     function testGenerateTokens() public {
+        vm.pauseGasMetering();
         _generateTokens(accounts[0], 10);
 
         vm.prank(deployer);
@@ -205,6 +222,7 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
         assertEq(clone.totalSupply(), 10);
 
         vm.prank(deployer);
+        vm.resumeGasMetering();
         clone.generateTokens(accounts[0], 5);
     }
 }
