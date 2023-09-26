@@ -5,21 +5,22 @@
 | Function Name                                  | min             | avg    | median | max     | # calls |
 | allowance                                      | 0               | 269    | 0      | 808     | 3       |
 | approve                                        | 30781           | 31244  | 31244  | 31708   | 2       |
-| balanceOf                                      | 0               | 393    | 0      | 2753    | 25      |
+| balanceOf                                      | 0               | 415    | 0      | 2753    | 35      |
 | balanceOfAt                                    | 0               | 90     | 0      | 2363    | 26      |
 | changeController                               | 0               | 1014   | 758    | 3558    | 5       |
-| controller                                     | 0               | 0      | 0      | 0       | 6       |
+| claimTokens                                    | 9537            | 41277  | 57148  | 57148   | 3       |
+| controller                                     | 0               | 0      | 0      | 0       | 7       |
 | createCloneToken                               | 0               | 916398 | 916398 | 1832796 | 2       |
-| decimals                                       | 0               | 0      | 0      | 0       | 6       |
+| decimals                                       | 0               | 0      | 0      | 0       | 7       |
 | destroyTokens                                  | 8956            | 8956   | 8956   | 8956    | 1       |
-| generateTokens                                 | 0               | 13676  | 0      | 95751   | 21      |
-| name                                           | 0               | 0      | 0      | 0       | 6       |
-| parentSnapShotBlock                            | 0               | 0      | 0      | 0       | 7       |
-| parentToken                                    | 0               | 0      | 0      | 0       | 7       |
-| symbol                                         | 0               | 0      | 0      | 0       | 6       |
+| generateTokens                                 | 0               | 12486  | 0      | 95751   | 23      |
+| name                                           | 0               | 0      | 0      | 0       | 7       |
+| parentSnapShotBlock                            | 0               | 0      | 0      | 0       | 8       |
+| parentToken                                    | 0               | 0      | 0      | 0       | 8       |
+| symbol                                         | 0               | 0      | 0      | 0       | 7       |
 | totalSupply                                    | 0               | 273    | 0      | 1911    | 7       |
 | totalSupplyAt                                  | 0               | 285    | 0      | 1995    | 7       |
-| transfer                                       | 9785            | 47444  | 55381  | 75187   | 10      |
+| transfer                                       | 9785            | 47934  | 53385  | 75187   | 12      |
 | transferFrom                                   | 0               | 23361  | 3495   | 66590   | 3       |
 
 

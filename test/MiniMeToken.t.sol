@@ -351,3 +351,72 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
         assertEq(clone.totalSupply(), 15, "total supply should be correct");
     }
 }
+
+contract ClaimTokensTest is MiniMeTokenTest {
+    function setUp() public virtual override {
+        MiniMeTokenTest.setUp();
+    }
+
+    function testClaimERC20() public {
+        vm.pauseGasMetering();
+        vm.startPrank(deployer);
+        MiniMeToken claimTest = new MiniMeToken(
+          minimeTokenFactory, 
+          MiniMeToken(payable(address(0))), 
+          0, 
+          "TestClaim", 
+          18, 
+          "TST", 
+          true
+        );
+        claimTest.generateTokens(address(minimeToken), 1234);
+
+        assertEq(claimTest.balanceOf(address(minimeToken)), 1234, "claimTest minimeToken balance should be correct");
+        assertEq(claimTest.balanceOf(address(deployer)), 0, "claimTest deployer balance should be correct");
+
+        vm.resumeGasMetering();
+        minimeToken.claimTokens(claimTest);
+        vm.pauseGasMetering();
+
+        vm.stopPrank();
+
+        assertEq(claimTest.balanceOf(address(minimeToken)), 0, "claimTest minimeToken balance should be correct");
+        assertEq(claimTest.balanceOf(address(deployer)), 1234, "claimTest deployer balance should be correct");
+        vm.resumeGasMetering();
+    }
+
+    function testClaimETH() public {
+        vm.pauseGasMetering();
+        vm.startPrank(deployer);
+        vm.deal(address(minimeToken), 1234);
+        assertEq(address(minimeToken).balance, 1234, "minimeToken balance should be correct");
+        assertEq(address(deployer).balance, 0, "deployer balance should be correct");
+
+        vm.resumeGasMetering();
+        minimeToken.claimTokens(MiniMeToken(payable(address(0))));
+        vm.pauseGasMetering();
+
+        assertEq(address(minimeToken).balance, 0, "minimeToken balance should be correct");
+        assertEq(address(deployer).balance, 1234, "deployer balance should be correct");
+
+        vm.stopPrank();
+        vm.resumeGasMetering();
+    }
+
+    function testClaimSelf() public {
+        vm.pauseGasMetering();
+        vm.startPrank(deployer);
+        minimeToken.generateTokens(address(minimeToken), 1234);
+        assertEq(minimeToken.balanceOf(address(minimeToken)), 1234, "minimeToken minimeToken balance should be 1234");
+        assertEq(minimeToken.balanceOf(address(deployer)), 0, "minimeToken deployer balance should be 0");
+
+        vm.resumeGasMetering();
+        minimeToken.claimTokens(minimeToken);
+        vm.pauseGasMetering();
+
+        assertEq(minimeToken.balanceOf(address(minimeToken)), 0, "minimeToken minimeToken balance should be 0");
+        assertEq(minimeToken.balanceOf(address(deployer)), 1234, "minimeToken deployer balance should be 1234");
+        vm.stopPrank();
+        vm.resumeGasMetering();
+    }
+}
