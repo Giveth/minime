@@ -6,7 +6,14 @@ import { Deploy } from "../script/Deploy.s.sol";
 import { DeploymentConfig } from "../script/DeploymentConfig.s.sol";
 
 import { NotAuthorized } from "../contracts/Controlled.sol";
-import { MiniMeToken, TransfersDisabled, InvalidDestination, NotEnoughBalance } from "../contracts/MiniMeToken.sol";
+import {
+    MiniMeToken,
+    TransfersDisabled,
+    InvalidDestination,
+    NotEnoughBalance,
+    NotEnoughAllowance,
+    AllowanceAlreadySet
+} from "../contracts/MiniMeToken.sol";
 import { MiniMeTokenFactory } from "../contracts/MiniMeTokenFactory.sol";
 
 contract MiniMeTokenTest is Test {
@@ -304,6 +311,68 @@ contract AllowanceTest is MiniMeTokenTest {
         assertEq(minimeToken.balanceOfAt(accounts[0], currentBlock), 10, "balance at original block should be correct");
         assertEq(minimeToken.balanceOfAt(accounts[0], nextBlock), 9, "balance at next block should be correct");
         assertEq(minimeToken.balanceOfAt(accounts[2], nextBlock), 1, "balance at next block should be correct");
+        vm.resumeGasMetering();
+    }
+
+    function testNoAllowance() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        vm.prank(accounts[1]);
+        uint256 allowed = minimeToken.allowance(accounts[0], accounts[1]);
+        assertEq(allowed, 0, "allowance should be correct");
+        vm.expectRevert(NotEnoughAllowance.selector);
+        vm.resumeGasMetering();
+        minimeToken.transferFrom(accounts[0], accounts[1], 1);
+    }
+
+    function testApproveTransferDisabled() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        vm.prank(deployer);
+        minimeToken.enableTransfers(false);
+        vm.prank(accounts[0]);
+        vm.expectRevert(TransfersDisabled.selector);
+        vm.resumeGasMetering();
+        minimeToken.approve(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.allowance(accounts[0], accounts[1]), 0, "allowance should be 0");
+        vm.resumeGasMetering();
+    }
+
+    function testAllowanceAlreadySet() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        vm.startPrank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.approve(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.allowance(accounts[0], accounts[1]), 2, "allowance should be 2");
+        vm.expectRevert(AllowanceAlreadySet.selector);
+        vm.resumeGasMetering();
+        minimeToken.approve(accounts[1], 3);
+        vm.pauseGasMetering();
+        vm.stopPrank();
+        assertEq(minimeToken.allowance(accounts[0], accounts[1]), 2, "allowance should stay 2");
+        vm.resumeGasMetering();
+    }
+
+    function testAllowanceReset() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        vm.startPrank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.approve(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.allowance(accounts[0], accounts[1]), 2, "allowance should be 2");
+        vm.resumeGasMetering();
+        minimeToken.approve(accounts[1], 0);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.allowance(accounts[0], accounts[1]), 0, "allowance should be 0");
+        vm.resumeGasMetering();
+        minimeToken.approve(accounts[1], 3);
+        vm.pauseGasMetering();
+        vm.stopPrank();
+        assertEq(minimeToken.allowance(accounts[0], accounts[1]), 3, "allowance should be 3");
         vm.resumeGasMetering();
     }
 }
