@@ -72,6 +72,53 @@ contract TransferTest is MiniMeTokenTest {
         MiniMeTokenTest.setUp();
     }
 
+    function testMultipleTransferToSame() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        _generateTokens(accounts[1], 10);
+        vm.roll(block.number + 1);
+
+        vm.prank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[2], 2);
+        vm.pauseGasMetering();
+
+        vm.prank(accounts[1]);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[2], 2);
+        vm.pauseGasMetering();
+
+        assertEq(minimeToken.balanceOf(accounts[0]), 8, "balance of sender 0 should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 8, "balance of sender 1 should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[2]), 4, "balance of receiver should be increased");
+
+        vm.resumeGasMetering();
+    }
+
+    function testMultipleTransferToSame2() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        _generateTokens(accounts[1], 10);
+        _generateTokens(accounts[2], 1);
+        vm.roll(block.number + 1);
+
+        vm.prank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[2], 2);
+        vm.pauseGasMetering();
+
+        vm.prank(accounts[1]);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[2], 2);
+        vm.pauseGasMetering();
+
+        assertEq(minimeToken.balanceOf(accounts[0]), 8, "balance of sender 0 should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 8, "balance of sender 1 should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[2]), 5, "balance of receiver should be increased");
+
+        vm.resumeGasMetering();
+    }
+
     function testDoubleTransfer() public {
         vm.pauseGasMetering();
 
@@ -86,6 +133,25 @@ contract TransferTest is MiniMeTokenTest {
 
         assertEq(minimeToken.balanceOf(accounts[0]), 6, "balance of sender should be reduced");
         assertEq(minimeToken.balanceOf(accounts[1]), 4, "balance of receiver should be increased");
+
+        vm.resumeGasMetering();
+    }
+
+    function testDoubleTransfer2() public {
+        vm.pauseGasMetering();
+
+        _generateTokens(accounts[0], 10);
+        _generateTokens(accounts[1], 1);
+        vm.roll(block.number + 1);
+        vm.startPrank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[1], 2);
+        minimeToken.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
+        vm.stopPrank();
+
+        assertEq(minimeToken.balanceOf(accounts[0]), 6, "balance of sender should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 5, "balance of receiver should be increased");
 
         vm.resumeGasMetering();
     }
@@ -111,6 +177,29 @@ contract TransferTest is MiniMeTokenTest {
         assertEq(minimeToken.balanceOf(accounts[1]), 2, "balance of receiver should be increased");
 
         assertEq(minimeToken.balanceOfAt(accounts[0], currentBlock), 10, "balance at original block should be correct");
+        vm.resumeGasMetering();
+    }
+
+    function testTransfer2() public {
+        vm.pauseGasMetering();
+        uint256 currentBlock = block.number;
+        uint256 nextBlock = currentBlock + 1;
+
+        _generateTokens(accounts[0], 10);
+        _generateTokens(accounts[1], 1);
+
+        // enforce the next block
+        vm.roll(nextBlock);
+
+        vm.prank(accounts[0]);
+
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
+
+        assertEq(minimeToken.balanceOf(accounts[0]), 8, "balance of sender should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 3, "balance of receiver should be increased");
+
         vm.resumeGasMetering();
     }
 }

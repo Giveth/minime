@@ -5,21 +5,21 @@
 | Function Name                                  | min             | avg    | median | max     | # calls |
 | allowance                                      | 0               | 269    | 0      | 808     | 3       |
 | approve                                        | 30781           | 31244  | 31244  | 31708   | 2       |
-| balanceOf                                      | 0               | 655    | 0      | 2753    | 15      |
+| balanceOf                                      | 0               | 393    | 0      | 2753    | 25      |
 | balanceOfAt                                    | 0               | 90     | 0      | 2363    | 26      |
 | changeController                               | 0               | 1014   | 758    | 3558    | 5       |
 | controller                                     | 0               | 0      | 0      | 0       | 6       |
 | createCloneToken                               | 0               | 916398 | 916398 | 1832796 | 2       |
 | decimals                                       | 0               | 0      | 0      | 0       | 6       |
 | destroyTokens                                  | 8956            | 8956   | 8956   | 8956    | 1       |
-| generateTokens                                 | 0               | 23933  | 0      | 95751   | 12      |
+| generateTokens                                 | 0               | 13676  | 0      | 95751   | 21      |
 | name                                           | 0               | 0      | 0      | 0       | 6       |
 | parentSnapShotBlock                            | 0               | 0      | 0      | 0       | 7       |
 | parentToken                                    | 0               | 0      | 0      | 0       | 7       |
 | symbol                                         | 0               | 0      | 0      | 0       | 6       |
 | totalSupply                                    | 0               | 273    | 0      | 1911    | 7       |
 | totalSupplyAt                                  | 0               | 285    | 0      | 1995    | 7       |
-| transfer                                       | 9785            | 53386  | 75187  | 75187   | 3       |
+| transfer                                       | 9785            | 47444  | 55381  | 75187   | 10      |
 | transferFrom                                   | 0               | 23361  | 3495   | 66590   | 3       |
 
 
