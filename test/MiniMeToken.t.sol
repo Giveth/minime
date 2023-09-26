@@ -71,6 +71,24 @@ contract TransferTest is MiniMeTokenTest {
         MiniMeTokenTest.setUp();
     }
 
+    function testDoubleTransfer() public {
+        vm.pauseGasMetering();
+
+        _generateTokens(accounts[0], 10);
+        vm.roll(block.number + 1);
+        vm.startPrank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[1], 2);
+        minimeToken.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
+        vm.stopPrank();
+
+        assertEq(minimeToken.balanceOf(accounts[0]), 6);
+        assertEq(minimeToken.balanceOf(accounts[1]), 4);
+
+        vm.resumeGasMetering(); 
+    }
+
     function testTransfer() public {
         vm.pauseGasMetering();
         uint256 currentBlock = block.number;
