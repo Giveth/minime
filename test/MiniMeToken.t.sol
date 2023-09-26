@@ -779,7 +779,7 @@ contract ClaimTokensTest is MiniMeTokenTest {
         assertEq(address(deployer).balance, 0, "deployer balance should be correct");
 
         vm.resumeGasMetering();
-        minimeToken.claimTokens(MiniMeToken(payable(address(0))));
+        minimeToken.claimTokens(IERC20(address(0)));
         vm.pauseGasMetering();
 
         assertEq(address(minimeToken).balance, 0, "minimeToken balance should be correct");
