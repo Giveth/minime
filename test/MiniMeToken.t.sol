@@ -32,12 +32,14 @@ contract MiniMeTokenTest is Test {
     function testDeployment() public {
         (, address parentToken, uint256 parentSnapShotBlock, string memory name, uint8 decimals, string memory symbol,)
         = deploymentConfig.activeNetworkConfig();
+        vm.pauseGasMetering();
         assertEq(minimeToken.name(), name, "name should be correct");
         assertEq(minimeToken.symbol(), symbol, "symbol should be correct");
         assertEq(minimeToken.decimals(), decimals, "decimals should be correct");
         assertEq(minimeToken.controller(), deployer, "controller should be correct");
         assertEq(address(minimeToken.parentToken()), parentToken, "parent token should be correct");
         assertEq(minimeToken.parentSnapShotBlock(), parentSnapShotBlock, "parent snapshot block should be correct");
+        vm.resumeGasMetering();
     }
 
     function _generateTokens(address to, uint256 amount) internal {
@@ -57,7 +59,6 @@ contract GenerateTokensTest is MiniMeTokenTest {
     }
 
     function testGenerateTokens() public {
-        vm.resumeGasMetering();
         _generateTokens(accounts[0], 10);
         vm.pauseGasMetering();
         assertEq(minimeToken.totalSupply(), 10, "total supply should be correct");
