@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import { Test, console } from "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 import { Deploy } from "../script/Deploy.s.sol";
 import { DeploymentConfig } from "../script/DeploymentConfig.s.sol";
 
@@ -65,7 +65,11 @@ contract MiniMeTokenTest is Test {
 }
 
 contract AcceptingController is TokenController {
-    receive() external payable { }
+    event Received(address, uint256);
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
 
     function proxyPayment(address) public payable override returns (bool) {
         return true;
