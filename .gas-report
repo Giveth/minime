@@ -1,30 +1,29 @@
 | contracts/MiniMeToken.sol:MiniMeToken contract |                 |       |        |       |         |
 |------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                | Deployment Size |       |        |       |         |
-| 1651926                                        | 9241            |       |        |       |         |
+| 2149485                                        | 12251           |       |        |       |         |
 | Function Name                                  | min             | avg   | median | max   | # calls |
-| allowance                                      | 0               | 60    | 0      | 786   | 13      |
-| approve                                        | 0               | 15018 | 14715  | 31708 | 10      |
-| approveAndCall                                 | 0               | 31204 | 0      | 93613 | 3       |
+| allowance                                      | 0               | 62    | 0      | 808   | 13      |
+| approve                                        | 0               | 15064 | 14767  | 31771 | 10      |
+| approveAndCall                                 | 0               | 31232 | 0      | 93698 | 3       |
 | balanceOf                                      | 0               | 550   | 0      | 2731  | 63      |
 | balanceOfAt                                    | 0               | 905   | 0      | 4027  | 78      |
 | changeController                               | 0               | 593   | 0      | 3558  | 6       |
-| claimTokens                                    | 9582            | 41342 | 57222  | 57222 | 3       |
+| claimTokens                                    | 9537            | 41267 | 57132  | 57132 | 3       |
 | controller                                     | 0               | 0     | 0      | 0     | 9       |
 | decimals                                       | 0               | 0     | 0      | 0     | 9       |
-| destroyTokens                                  | 2286            | 5184  | 4288   | 8979  | 3       |
+| destroyTokens                                  | 2286            | 5185  | 4288   | 8983  | 3       |
 | enableTransfers                                | 0               | 0     | 0      | 0     | 3       |
-| generateTokens                                 | 0               | 14007 | 0      | 95829 | 62      |
+| generateTokens                                 | 0               | 14015 | 0      | 95885 | 62      |
 | name                                           | 0               | 0     | 0      | 0     | 9       |
 | parentSnapShotBlock                            | 0               | 0     | 0      | 0     | 10      |
 | parentToken                                    | 0               | 0     | 0      | 0     | 10      |
 | receive                                        | 7960            | 7979  | 7979   | 7998  | 2       |
 | symbol                                         | 0               | 0     | 0      | 0     | 9       |
 | totalSupply                                    | 0               | 286   | 0      | 2480  | 22      |
-| totalSupplyAt                                  | 0               | 866   | 0      | 3637  | 17      |
-| transfer                                       | 571             | 39327 | 50440  | 93129 | 20      |
-| transferFrom                                   | 0               | 16831 | 3495   | 66552 | 7       |
+| totalSupplyAt                                  | 0               | 873   | 0      | 3659  | 17      |
+| transfer                                       | 526             | 39283 | 50395  | 93092 | 20      |
+| transferFrom                                   | 0               | 16834 | 3495   | 66574 | 7       |
 
 
 
- 

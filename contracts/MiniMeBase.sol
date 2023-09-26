@@ -12,6 +12,8 @@ error Overflow();
 error AllowanceAlreadySet();
 error OperationFailed();
 error ControllerNotSet();
+error ERC2612ExpiredSignature(uint256 deadline);
+error ERC2612InvalidSigner(address signer, address owner);
 /*
     Copyright 2016, Jordi Baylina
 
@@ -33,6 +35,10 @@ import { Controlled } from "./Controlled.sol";
 import { TokenController } from "./TokenController.sol";
 import { ApproveAndCallFallBack } from "./ApproveAndCallFallBack.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { Nonces } from "./Nonces.sol";
 
 /// @title MiniMeBase Contract
 /// @author Jordi Baylina
@@ -40,11 +46,13 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 ///  token using the token distribution at a given block, this will allow DAO's
 ///  and DApps to upgrade their features in a decentralized manner without
 ///  affecting the original token
-abstract contract MiniMeBase is Controlled, IERC20 {
+abstract contract MiniMeBase is Controlled, IERC20, IERC20Permit, EIP712, Nonces {
     string public name; //The Token's name: e.g. DigixDAO Tokens
     uint8 public immutable decimals; //Number of decimals of the smallest unit
     string public symbol; //An identifier: e.g. REP
     string public constant TOKEN_VERSION = "MMT_0.2"; //An arbitrary versioning scheme
+    bytes32 private constant PERMIT_TYPEHASH =
+        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
     /// @dev `Checkpoint` is the structure that attaches a block number to a
     ///  given value, the block number attached is the one that last changed the
@@ -98,7 +106,9 @@ abstract contract MiniMeBase is Controlled, IERC20 {
         uint8 _decimalUnits,
         string memory _tokenSymbol,
         bool _transfersEnabled
-    ) {
+    )
+        EIP712(_tokenName, TOKEN_VERSION)
+    {
         name = _tokenName; // Set the name
         decimals = _decimalUnits; // Set the decimals
         symbol = _tokenSymbol; // Set the symbol
@@ -200,23 +210,58 @@ abstract contract MiniMeBase is Controlled, IERC20 {
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return success True if the approval was successful
     function approve(address _spender, uint256 _amount) public returns (bool success) {
+        return doApprove(msg.sender, _spender, _amount);
+    }
+
+    /**
+     * @inheritdoc IERC20Permit
+     */
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+        public
+        virtual
+    {
+        if (block.timestamp > deadline) {
+            revert ERC2612ExpiredSignature(deadline);
+        }
+
+        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, _useNonce(owner), deadline));
+
+        bytes32 hash = _hashTypedDataV4(structHash);
+
+        address signer = ECDSA.recover(hash, v, r, s);
+        if (signer != owner) {
+            revert ERC2612InvalidSigner(signer, owner);
+        }
+
+        doApprove(owner, spender, value);
+    }
+
+    function doApprove(address _owner, address _spender, uint256 _amount) internal returns (bool) {
         if (!transfersEnabled) revert TransfersDisabled();
 
         // To change the approve amount you first have to reduce the addresses`
         //  allowance to zero by calling `approve(_spender,0)` if it is not
         //  already 0 to mitigate the race condition described here:
         //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-        if ((_amount != 0) && (allowed[msg.sender][_spender] != 0)) revert AllowanceAlreadySet();
+        if ((_amount != 0) && (allowed[_owner][_spender] != 0)) revert AllowanceAlreadySet();
 
         // Alerts the token controller of the approve function call
         if (isContract(controller)) {
-            if (!TokenController(controller).onApprove(msg.sender, _spender, _amount)) {
+            if (!TokenController(controller).onApprove(_owner, _spender, _amount)) {
                 revert ControllerRejected();
             }
         }
 
-        allowed[msg.sender][_spender] = _amount;
-        emit Approval(msg.sender, _spender, _amount);
+        allowed[_owner][_spender] = _amount;
+        emit Approval(_owner, _spender, _amount);
         return true;
     }
 
@@ -298,6 +343,21 @@ abstract contract MiniMeBase is Controlled, IERC20 {
         } else {
             return getValueAt(totalSupplyHistory, _blockNumber);
         }
+    }
+
+    ///
+    /// @inheritdoc IERC20Permit
+    ///
+    function nonces(address owner) public view virtual override(IERC20Permit, Nonces) returns (uint256) {
+        return super.nonces(owner);
+    }
+
+    ///
+    /// @inheritdoc IERC20Permit
+    ///
+    // solhint-disable-next-line func-name-mixedcase
+    function DOMAIN_SEPARATOR() external view virtual returns (bytes32) {
+        return _domainSeparatorV4();
     }
 
     ////////////////
