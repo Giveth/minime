@@ -16,6 +16,7 @@ import {
     AllowanceAlreadySet,
     ControllerRejected,
     Overflow,
+    ParentSnapshotNotReached,
     IERC20
 } from "../contracts/MiniMeBase.sol";
 import { MiniMeToken } from "../contracts/MiniMeToken.sol";
@@ -810,6 +811,38 @@ contract CreateCloneTokenTest is MiniMeTokenTest {
         vm.resumeGasMetering();
         clone.generateTokens(accounts[0], 5);
         assertEq(clone.totalSupply(), 15, "total supply should be correct");
+    }
+
+    function testCloneFutureSnapshot() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+
+        vm.prank(accounts[3]);
+        MiniMeToken clone = new MiniMeToken(
+          minimeTokenFactory, 
+          minimeToken, 
+          block.number+1, 
+          "TestFutureSnapshot", 
+          18, 
+          "TST", 
+          true
+        );
+        vm.expectRevert(ParentSnapshotNotReached.selector);
+        vm.prank(accounts[0]);
+        vm.resumeGasMetering();
+        clone.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(clone.balanceOf(accounts[0]), 10, "balance of account 0 should not change");
+        assertEq(clone.balanceOf(accounts[1]), 0, "balance of account 1 should not change");
+        vm.roll(block.number + 2);
+        vm.prank(accounts[0]);
+        vm.resumeGasMetering();
+        clone.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(clone.balanceOf(accounts[0]), 8, "balance of account 0 should be correct");
+        assertEq(clone.balanceOf(accounts[1]), 2, "balance of account 1 should be correct");
+
+        vm.resumeGasMetering();
     }
 }
 
