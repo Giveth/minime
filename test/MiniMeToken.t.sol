@@ -922,13 +922,12 @@ contract TestSnapshotReads is MiniMeTokenTest {
     }
 
     function testSnapshotReads() public {
-
         assertEq(minimeToken.totalSupply(), 0, "initial total supply should be correct");
         assertEq(minimeToken.balanceOf(accounts[0]), 0, "initial balance of account 0 should be correct");
         assertEq(minimeToken.balanceOf(accounts[1]), 0, "initial balance of account 1 should be correct");
         assertEq(minimeToken.balanceOf(accounts[2]), 0, "initial balance of account 2 should be correct");
         assertEq(minimeToken.balanceOf(accounts[3]), 0, "initial balance of account 3 should be correct");
-        
+
         _generateTokens(accounts[0], 10);
         _generateTokens(accounts[1], 5);
         _generateTokens(accounts[2], 3);
