@@ -5,6 +5,7 @@ import { Test } from "forge-std/Test.sol";
 import { Deploy } from "../script/Deploy.s.sol";
 import { DeploymentConfig } from "../script/DeploymentConfig.s.sol";
 
+import { TokenController } from "../contracts/TokenController.sol";
 import { NotAuthorized } from "../contracts/Controlled.sol";
 import {
     TransfersDisabled,
@@ -12,6 +13,7 @@ import {
     NotEnoughBalance,
     NotEnoughAllowance,
     AllowanceAlreadySet,
+    ControllerRejected,
     IERC20
 } from "../contracts/MiniMeBase.sol";
 import { MiniMeToken } from "../contracts/MiniMeToken.sol";
@@ -55,6 +57,20 @@ contract MiniMeTokenTest is Test {
     function _generateTokens(address to, uint256 amount) internal {
         vm.prank(deployer);
         minimeToken.generateTokens(to, amount);
+    }
+}
+
+contract RejectingController is TokenController {
+    function proxyPayment(address) public payable override returns (bool) {
+        return false;
+    }
+
+    function onTransfer(address, address, uint256) public pure override returns (bool) {
+        return false;
+    }
+
+    function onApprove(address, address, uint256) public pure override returns (bool) {
+        return false;
     }
 }
 
@@ -274,6 +290,22 @@ contract TransferTest is MiniMeTokenTest {
         assertEq(minimeToken.balanceOf(accounts[1]), 0, "balance of receiver shouldn't be increased");
         vm.resumeGasMetering();
     }
+
+    function testRejectedTransfer() public {
+        vm.pauseGasMetering();
+        address payable rejectingController = payable(address(new RejectingController()));
+        _generateTokens(accounts[0], 10);
+        vm.prank(deployer);
+        minimeToken.changeController(rejectingController);
+        vm.prank(accounts[0]);
+        vm.expectRevert(ControllerRejected.selector);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.balanceOf(accounts[0]), 10, "balance of sender shouldn't be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 0, "balance of receiver shouldn't be increased");
+        vm.resumeGasMetering();
+    }
 }
 
 contract AllowanceTest is MiniMeTokenTest {
@@ -406,6 +438,21 @@ contract AllowanceTest is MiniMeTokenTest {
             abi.encodeWithSelector(approverAccount.unsupportedMethod.selector, true, "data")
         );
         vm.stopPrank();
+        vm.resumeGasMetering();
+    }
+
+    function testRejectedApproval() public {
+        vm.pauseGasMetering();
+        address payable rejectingController = payable(address(new RejectingController()));
+        _generateTokens(accounts[0], 10);
+        vm.prank(deployer);
+        minimeToken.changeController(rejectingController);
+        vm.prank(accounts[0]);
+        vm.expectRevert(ControllerRejected.selector);
+        vm.resumeGasMetering();
+        minimeToken.approve(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.allowance(accounts[0], accounts[1]), 0, "allowance should be 0");
         vm.resumeGasMetering();
     }
 }
