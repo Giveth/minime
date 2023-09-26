@@ -603,7 +603,7 @@ contract ApproverAccount is ApproveAndCallFallBack {
         emit TokenDeposit2(_from, _amount, _value, _data);
     }
 
-    function unsupportedMethod() external {
+    function unsupportedMethod() external pure {
         revert("ApproverAccount: unsupported method");
     }
     /**
