@@ -307,6 +307,20 @@ contract TransferTest is MiniMeTokenTest {
         assertEq(minimeToken.balanceOf(accounts[1]), 0, "balance of receiver shouldn't be increased");
         vm.resumeGasMetering();
     }
+
+    function testTransferControllerZero() public {
+        vm.pauseGasMetering();
+        _generateTokens(accounts[0], 10);
+        vm.prank(deployer);
+        minimeToken.changeController(payable(address(0)));
+        vm.prank(accounts[0]);
+        vm.resumeGasMetering();
+        minimeToken.transfer(accounts[1], 2);
+        vm.pauseGasMetering();
+        assertEq(minimeToken.balanceOf(accounts[0]), 8, "balance of sender should be reduced");
+        assertEq(minimeToken.balanceOf(accounts[1]), 2, "balance of receiver should be increased");
+        vm.resumeGasMetering();
+    }
 }
 
 contract AllowanceTest is MiniMeTokenTest {
