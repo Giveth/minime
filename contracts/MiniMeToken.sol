@@ -210,19 +210,21 @@ contract MiniMeToken is Controlled {
     }
 
     /// @notice `msg.sender` approves `_spender` to spend `_amount` tokens on
-    ///  its behalf. This is a modified version of the ERC20 approve function
-    ///  to be a little bit safer
+    ///  its behalf.
+
     /// @param _spender The address of the account able to transfer the tokens
     /// @param _amount The amount of tokens to be approved for transfer
     /// @return True if the approval was successful
     function approve(address _spender, uint256 _amount) public returns (bool success) {
         require(transfersEnabled);
-
-        // To change the approve amount you first have to reduce the addresses`
+        
+        //  To change the approve amount you first have to reduce the addresses`
         //  allowance to zero by calling `approve(_spender,0)` if it is not
         //  already 0 to mitigate the race condition described here:
         //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-        require((_amount == 0) || (allowed[msg.sender][_spender] == 0));
+        //  According to the ERC20 standard, the interface has to deal with the issue,
+        //  but the contract must still accept all approves for backward compatibility.
+
 
         // Alerts the token controller of the approve function call
         if (isContract(controller)) {
